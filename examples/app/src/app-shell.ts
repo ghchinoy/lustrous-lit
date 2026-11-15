@@ -30,8 +30,16 @@ import {
 import "./pages/overview-page.js";
 import "./pages/services-page.js";
 import "./pages/settings-page.js";
+import "./pages/theming-page.js";
+import {
+  applyBrandCustomization,
+  DEFAULT_BRAND_STATE,
+  getBrandPreset,
+  readStoredBrandCustomization,
+  type BrandCustomizationState,
+} from "./theme-presets.js";
 
-export type MeridianRoute = "overview" | "services" | "settings";
+export type MeridianRoute = "overview" | "services" | "theming" | "settings";
 
 const THEME_STORAGE_KEY = "meridian.theme";
 const SIDEBAR_STORAGE_KEY = "meridian.sidebar.collapsed";
@@ -39,6 +47,7 @@ const SIDEBAR_STORAGE_KEY = "meridian.sidebar.collapsed";
 const ROUTE_TITLES: Readonly<Record<MeridianRoute, string>> = {
   overview: "Overview",
   services: "Services",
+  theming: "Theme Studio",
   settings: "Settings",
 };
 
@@ -65,14 +74,15 @@ const SHORTCUT_SECTIONS: readonly LustrousKeyboardShortcutSection[] = [
     rows: [
       { id: "nav-overview", description: "Go to Overview", keys: "Alt+1" },
       { id: "nav-services", description: "Go to Services", keys: "Alt+2" },
-      { id: "nav-settings", description: "Go to Settings", keys: "Alt+3" },
+      { id: "nav-theming", description: "Go to Theme Studio", keys: "Alt+3" },
+      { id: "nav-settings", description: "Go to Settings", keys: "Alt+4" },
     ],
   },
 ];
 
 function parseHashRoute(hash: string): MeridianRoute {
   const cleaned = hash.replace(/^#\/?/, "").toLowerCase();
-  if (cleaned === "services" || cleaned === "settings") return cleaned;
+  if (cleaned === "services" || cleaned === "theming" || cleaned === "settings") return cleaned;
   return "overview";
 }
 
@@ -216,6 +226,7 @@ export class MeridianAppShell extends LustrousElement {
   @state() private drawerOpen = false;
   @state() private shortcutsOpen = false;
   @state() private themePreference: LustrousThemePreference = "system";
+  @state() private brandState: BrandCustomizationState = DEFAULT_BRAND_STATE;
 
   @query("#main-content") private mainEl?: HTMLElement;
 
@@ -251,15 +262,23 @@ export class MeridianAppShell extends LustrousElement {
     onTrigger: () => this.navigate("services", true),
   });
 
+  protected readonly navThemingShortcut = new LustrousShortcutController(this, {
+    id: "meridian.nav.theming",
+    keys: "Alt+3",
+    onTrigger: () => this.navigate("theming", true),
+  });
+
   protected readonly navSettingsShortcut = new LustrousShortcutController(this, {
     id: "meridian.nav.settings",
-    keys: "Alt+3",
+    keys: "Alt+4",
     onTrigger: () => this.navigate("settings", true),
   });
 
   override connectedCallback(): void {
     super.connectedCallback();
     this.themePreference = readLustrousThemePreference(THEME_STORAGE_KEY);
+    this.brandState = readStoredBrandCustomization();
+    applyBrandCustomization(this.brandState, false);
     this.sidebarCollapsed = readStoredSidebarCollapsed();
     if (typeof window !== "undefined") {
       this.route = parseHashRoute(window.location.hash);
@@ -336,6 +355,15 @@ export class MeridianAppShell extends LustrousElement {
     this.navigate(e.detail.route, true);
   }
 
+  private handleBrandChange(e: CustomEvent<BrandCustomizationState>): void {
+    this.brandState = e.detail;
+    applyBrandCustomization(this.brandState, true);
+  }
+
+  private handleThemeModeChange(e: CustomEvent<{ preference: LustrousThemePreference }>): void {
+    this.applyTheme(e.detail.preference);
+  }
+
   private renderSidebar(inDrawer: boolean) {
     const collapsed = inDrawer ? false : this.sidebarCollapsed;
     const currentTheme = THEME_META[this.themePreference];
@@ -374,6 +402,13 @@ export class MeridianAppShell extends LustrousElement {
               badge-label="1 degraded service"
               .active=${this.route === "services"}
               @click=${() => this.navigate("services", true)}
+            ></lustrous-sidebar-item>
+            <lustrous-sidebar-item
+              icon="palette"
+              label="Theme Studio"
+              meta=${this.brandState.preset === "default" ? "" : getBrandPreset(this.brandState.preset).name.split(" ")[0]!}
+              .active=${this.route === "theming"}
+              @click=${() => this.navigate("theming", true)}
             ></lustrous-sidebar-item>
             <lustrous-sidebar-item
               icon="settings"
@@ -477,6 +512,12 @@ export class MeridianAppShell extends LustrousElement {
     if (this.route === "services") {
       return html`<meridian-services-page></meridian-services-page>`;
     }
+    if (this.route === "theming") {
+      return html`<meridian-theming-page
+        .brandState=${this.brandState}
+        .themePreference=${this.themePreference}
+      ></meridian-theming-page>`;
+    }
     if (this.route === "settings") {
       return html`<meridian-settings-page></meridian-settings-page>`;
     }
@@ -494,7 +535,12 @@ export class MeridianAppShell extends LustrousElement {
         Skip to main content
       </a>
 
-      <div class="shell" @meridian-navigate=${this.handleChildNavigate}>
+      <div
+        class="shell"
+        @meridian-navigate=${this.handleChildNavigate}
+        @meridian-brand-change=${this.handleBrandChange}
+        @meridian-theme-mode=${this.handleThemeModeChange}
+      >
         ${isShellMobile
           ? html`
               <header class="mobile-topbar">
@@ -538,7 +584,7 @@ export class MeridianAppShell extends LustrousElement {
           : this.renderSidebar(false)}
 
         <main id="main-content" tabindex="-1" aria-label="${ROUTE_TITLES[this.route]} workspace">
-          ${this.route === "settings"
+          ${this.route === "settings" || this.route === "theming"
             ? html`<lustrous-scrollable-box class="page-scroll" scrim="end">
                 ${this.renderActiveRoute()}
               </lustrous-scrollable-box>`
