@@ -1,0 +1,10 @@
+node_modules/
+dist/
+storybook-static/
+examples/app/dist/
+playwright-report-visual/
+playwright-report-a11y/
+test-results/
+.vitest/
+*.tgz
+.DS_Store

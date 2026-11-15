@@ -1,0 +1,40 @@
+/*
+ * Lustrous Design System fonts — Google Sans Flex + Google Sans Code
+ * (SIL Open Font License 1.1; see OFL-*.txt in this directory).
+ *
+ * @font-face rules only apply at document level (not inside shadow roots), so
+ * load this file once from your page or application entry:
+ *
+ *   <link rel="stylesheet" href="/node_modules/@ghchinoy/lustrous-lit/fonts/lustrous-fonts.css">
+ *   // or, with a bundler:
+ *   import "@ghchinoy/lustrous-lit/fonts.css";
+ *
+ * Bundled files are Latin + Latin-Extended subsets of the variable fonts:
+ *   GoogleSansFlex-latin.woff2  axes: wght 1–1000, wdth 75–100, opsz 6–72, ROND 0–100
+ *   GoogleSansCode-latin.woff2  axes: wght 300–800 (+ italic)
+ * For non-Latin scripts, load the full families from Google Fonts instead.
+ */
+@font-face {
+  font-family: "Google Sans Flex";
+  src: url("./GoogleSansFlex-latin.woff2") format("woff2-variations"), url("./GoogleSansFlex-latin.woff2") format("woff2");
+  font-weight: 1 1000;
+  font-stretch: 75% 100%;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Google Sans Code";
+  src: url("./GoogleSansCode-latin.woff2") format("woff2-variations"), url("./GoogleSansCode-latin.woff2") format("woff2");
+  font-weight: 300 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Google Sans Code";
+  src: url("./GoogleSansCode-Italic-latin.woff2") format("woff2-variations"), url("./GoogleSansCode-Italic-latin.woff2") format("woff2");
+  font-weight: 300 800;
+  font-style: italic;
+  font-display: swap;
+}

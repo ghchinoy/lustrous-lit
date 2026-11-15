@@ -1,0 +1,144 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  verify:
+    name: Verify Tag, Build & Tests
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.1-noble
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Mark workspace safe for Git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Verify Git tag matches package.json version
+        run: |
+          node -e '
+            const fs = require("node:fs");
+            const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+            const tag = process.env.GITHUB_REF_NAME || "";
+            if (tag !== `v${pkg.version}`) {
+              console.error(`Tag "${tag}" does not match package.json version "v${pkg.version}".`);
+              process.exit(1);
+            }
+            console.log(`Verified tag ${tag} matches package.json version ${pkg.version}.`);
+          '
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify clean-room & CSP hygiene
+        run: pnpm check:clean
+
+      - name: Typecheck library & example app
+        run: pnpm typecheck:all
+
+      - name: Build package
+        run: pnpm build
+
+      - name: Run unit tests
+        run: pnpm test
+
+  publish:
+    name: Publish to npm & Create GitHub Release
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: "https://registry.npmjs.org"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build package
+        run: pnpm build
+
+      - name: Pack release tarball
+        run: npm pack
+
+      - name: Publish to public npm with provenance
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_OIDC: ${{ vars.NPM_OIDC }}
+        run: |
+          if [ -n "$NPM_TOKEN" ]; then
+            export NODE_AUTH_TOKEN="$NPM_TOKEN"
+            npm publish --provenance --access public
+          elif [ "$NPM_OIDC" = "true" ]; then
+            # Clear setup-node's placeholder token line so npm OIDC trusted publishing authenticates directly
+            if [ -n "${NPM_CONFIG_USERCONFIG:-}" ] && [ -f "$NPM_CONFIG_USERCONFIG" ]; then
+              grep -v "_authToken" "$NPM_CONFIG_USERCONFIG" > "${NPM_CONFIG_USERCONFIG}.tmp" || true
+              mv "${NPM_CONFIG_USERCONFIG}.tmp" "$NPM_CONFIG_USERCONFIG"
+            fi
+            npm publish --provenance --access public
+          else
+            echo "::notice::Skipping npm publish (configure NPM_TOKEN secret or set NPM_OIDC=true repository variable for OIDC trusted publishing)."
+          fi
+
+      - name: Extract release notes from CHANGELOG.md
+        run: |
+          node -e '
+            const fs = require("node:fs");
+            const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+            const changelog = fs.readFileSync("CHANGELOG.md", "utf8");
+            const escaped = pkg.version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            const startRe = new RegExp(`^##\\s+\\[?${escaped}\\]?(?:\\s|[—–-]|$)`, "m");
+            const startMatch = startRe.exec(changelog);
+            let notes = `Release v${pkg.version}`;
+            if (startMatch) {
+              const afterHeading = changelog.slice(startMatch.index + startMatch[0].length);
+              const lineEnd = afterHeading.indexOf("\n");
+              const body = lineEnd >= 0 ? afterHeading.slice(lineEnd + 1) : "";
+              const nextHeading = body.search(/^##\s+/m);
+              const rawSection = nextHeading >= 0 ? body.slice(0, nextHeading) : body;
+              const extracted = rawSection.replace(/^\[[^\]]+\]:\s+https?:\/\/.*$/gm, "").trim();
+              if (extracted) notes = extracted;
+            }
+            fs.writeFileSync("release-notes.md", notes + "\n", "utf8");
+          '
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" *.tgz \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file release-notes.md
+          rm -f release-notes.md *.tgz
