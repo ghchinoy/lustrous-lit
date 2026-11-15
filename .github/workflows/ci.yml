@@ -4,6 +4,7 @@ on:
   push:
     branches: ["main"]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -76,6 +77,7 @@ jobs:
           retention-days: 14
 
       - name: Run WCAG 2.1 AA accessibility checks
+        if: ${{ !cancelled() }}
         id: a11y
         run: pnpm test:a11y
 
