@@ -44,6 +44,7 @@ export default meta;
 type Story = StoryObj;
 
 export const PosterFrame: Story = {
+  tags: ["hover:video"],
   loaders: [async () => ({ src: await clip() })],
   render: (_args, { loaded }) => html`
     <lustrous-box height="640">

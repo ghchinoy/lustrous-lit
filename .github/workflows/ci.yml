@@ -118,4 +118,7 @@ jobs:
         run: pnpm build
 
       - name: Run unit tests on ${{ matrix.browser }}
-        run: LUSTROUS_BROWSERS=${{ matrix.browser }} pnpm test
+        env:
+          HOME: /root
+          LUSTROUS_BROWSERS: ${{ matrix.browser }}
+        run: pnpm test

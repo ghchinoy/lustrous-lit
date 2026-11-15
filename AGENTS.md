@@ -94,7 +94,7 @@ lustrous-lit/
 │       │   ├── lustrous-<name>.ts      #   Custom element class + HTMLElementTagNameMap augmentation
 │       │   ├── lustrous-<name>.test.ts #   Vitest Browser Mode unit/interaction tests
 │       │   ├── lustrous-<name>.stories.ts # Storybook stories (used by docs, visual & a11y suites)
-│       │   ├── screenshots/            #   Linux Playwright visual regression baselines (*.png)
+│       │   ├── screenshots/            #   Lossless WebP visual regression baselines (*.webp; *.png gitignored)
 │       │   └── README.md               #   Per-component API, slots, events, parts & accessibility reference
 │       └── lustrous-lightbox/          # Shared LustrousLightboxBase used by photo & video lightboxes
 ├── fonts/                              # Self-hosted OFL-1.1 Google Sans Flex + Google Sans Code WOFF2 & lustrous-fonts.css

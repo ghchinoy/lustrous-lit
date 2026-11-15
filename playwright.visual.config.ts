@@ -6,6 +6,7 @@ const executablePath = process.env.CHROMIUM_PATH || undefined;
 
 export default defineConfig({
   testDir: "tests/visual",
+  globalSetup: "./tests/visual/global-setup.ts",
   snapshotPathTemplate: "{arg}{ext}",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,

@@ -52,14 +52,16 @@ for (const story of stories) {
 }
 
 test("no orphaned baselines", () => {
-  const expected = new Set(stories.flatMap((s) => MODES.map((m) => snapshotPath(s, m))));
+  const expectedPng = new Set(stories.flatMap((s) => MODES.map((m) => snapshotPath(s, m))));
+  const expectedWebp = new Set([...expectedPng].map((p) => `${p.slice(0, -4)}.webp`));
   const dirs = new Set(stories.map((s) => join(s.dir, "screenshots")));
   const orphans: string[] = [];
   for (const dir of dirs) {
     if (!existsSync(dir)) continue;
     for (const f of readdirSync(dir)) {
       const p = join(dir, f).split("\\").join("/");
-      if (!expected.has(p)) orphans.push(p);
+      const ok = f.endsWith(".webp") ? expectedWebp.has(p) : expectedPng.has(p);
+      if (!ok) orphans.push(p);
     }
   }
   expect(orphans, "run `pnpm test:visual:update` to prune").toEqual([]);
