@@ -379,7 +379,7 @@ Components work in Plain HTML + Import Maps, Lit 3, React 19 / `@lit/react`, Vue
      git tag vX.Y.Z
      git push origin vX.Y.Z
      ```
-  4. [`.github/workflows/release.yml`](./.github/workflows/release.yml) verifies tag parity, runs full checks, publishes `@ghchinoy/lustrous-lit` to npm with `--provenance --access public` (via `NPM_TOKEN` or npm Trusted Publishing OIDC with `NPM_OIDC=true`), and creates the GitHub Release from `CHANGELOG.md` with the `.tgz` tarball attached.
+  4. [`.github/workflows/release.yml`](./.github/workflows/release.yml) verifies tag parity, runs full checks, publishes `@ghchinoy/lustrous-lit` to npm with `--provenance --access public` via npm OIDC Trusted Publishing (`npm trust github @ghchinoy/lustrous-lit --file release.yml --repo ghchinoy/lustrous-lit --allow-publish`), and creates the GitHub Release from `CHANGELOG.md` with the `.tgz` tarball attached.
 
 ---
 

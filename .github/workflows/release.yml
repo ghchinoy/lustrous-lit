@@ -77,10 +77,10 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
-      - name: Setup Node.js 22
+      - name: Setup Node.js 24 (npm 11+ for OIDC Trusted Publishing)
         uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           registry-url: "https://registry.npmjs.org"
           cache: pnpm
 
@@ -93,23 +93,26 @@ jobs:
       - name: Pack release tarball
         run: npm pack
 
-      - name: Publish to public npm with provenance
+      - name: Publish to public npm with provenance (OIDC Trusted Publishing)
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_OIDC: ${{ vars.NPM_OIDC }}
+          NPM_SKIP_PUBLISH: ${{ vars.NPM_SKIP_PUBLISH }}
         run: |
-          if [ -n "$NPM_TOKEN" ]; then
+          node -e 'const [maj,min,pat]=process.argv[1].split(".").map(Number); process.exit(maj>11||(maj===11&&(min>5||(min===5&&pat>=1)))?0:1)' "$(npm -v)" || npm install -g "npm@^11.15.0"
+          echo "Using Node $(node -v) / npm $(npm -v)"
+          if [ "$NPM_SKIP_PUBLISH" = "true" ]; then
+            echo "::notice::Skipping npm publish because NPM_SKIP_PUBLISH=true."
+          elif [ -n "$NPM_TOKEN" ]; then
             export NODE_AUTH_TOKEN="$NPM_TOKEN"
             npm publish --provenance --access public
-          elif [ "$NPM_OIDC" = "true" ]; then
-            # Clear setup-node's placeholder token line so npm OIDC trusted publishing authenticates directly
+          else
+            # Clear setup-node's placeholder _authToken line so npm OIDC trusted publishing authenticates directly
             if [ -n "${NPM_CONFIG_USERCONFIG:-}" ] && [ -f "$NPM_CONFIG_USERCONFIG" ]; then
               grep -v "_authToken" "$NPM_CONFIG_USERCONFIG" > "${NPM_CONFIG_USERCONFIG}.tmp" || true
               mv "${NPM_CONFIG_USERCONFIG}.tmp" "$NPM_CONFIG_USERCONFIG"
             fi
+            unset NODE_AUTH_TOKEN
             npm publish --provenance --access public
-          else
-            echo "::notice::Skipping npm publish (configure NPM_TOKEN secret or set NPM_OIDC=true repository variable for OIDC trusted publishing)."
           fi
 
       - name: Extract release notes from CHANGELOG.md
