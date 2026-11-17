@@ -68,6 +68,16 @@ Modern browsers load ES modules directly using `<script type="importmap">`:
 </html>
 ```
 
+For quick prototypes or sandboxes without vendoring `node_modules`, you can also import directly from public npm CDNs (`jsDelivr` + `esm.sh`):
+
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ghchinoy/lustrous-lit@0.1.0/fonts/lustrous-fonts.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ghchinoy/lustrous-lit@0.1.0/dist/lustrous-theme.css" />
+<script type="module">
+  import "https://esm.sh/@ghchinoy/lustrous-lit@0.1.0/components/lustrous-button";
+</script>
+```
+
 ---
 
 ## Lit 3

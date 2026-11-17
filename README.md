@@ -6,6 +6,8 @@
 [![Lit 3](https://img.shields.io/badge/Lit-3.x-2563eb.svg)](https://lit.dev/)
 [![WCAG 2.1 AA](https://img.shields.io/badge/WCAG%202.1-AA-047857.svg)](#accessibility)
 
+**[Interactive Storybook](https://ghchinoy.github.io/lustrous-lit/)** · **[Meridian Studio Demo](https://ghchinoy.github.io/lustrous-lit/example/)** · **[Theme & Brand Studio](https://ghchinoy.github.io/lustrous-lit/example/#theming)** · **[npm Package](https://www.npmjs.com/package/@ghchinoy/lustrous-lit)**
+
 `@ghchinoy/lustrous-lit` is a Lit 3 Web Components design system providing 51 accessible custom elements, `@layer lustrous` Mineral Slate and Sapphire tokens, bundled OFL-1.1 Google Sans Flex and Google Sans Code fonts, `ElementInternals` form controls, and native Popover/`<dialog>` overlays. It runs in plain HTML, modern frontend frameworks, embedded Go/Rust/Python binaries, strict `style-src 'self'` CSP environments, and `@lit-labs/ssr` pipelines with no runtime dependencies beyond `lit`.
 
 ## Contents
@@ -26,7 +28,7 @@
 
 ## Installation
 
-Install `@ghchinoy/lustrous-lit` and its `lit` (`^3.0.0`) peer dependency:
+Install `@ghchinoy/lustrous-lit` from [npm](https://www.npmjs.com/package/@ghchinoy/lustrous-lit) along with its `lit` (`^3.0.0`) peer dependency:
 
 ```bash
 pnpm add @ghchinoy/lustrous-lit lit
@@ -34,6 +36,41 @@ pnpm add @ghchinoy/lustrous-lit lit
 
 ```bash
 npm install @ghchinoy/lustrous-lit lit
+```
+
+### AI Coding Agent Skill (Optional)
+
+Install the bundled [Lustrous agent skill (`SKILL.md`)](./.agents/skills/lustrous-lit/SKILL.md) for OpenCode, Claude Code, Cursor, or Codex:
+
+```bash
+npx skills add ghchinoy/lustrous-lit
+```
+
+### Zero-Build CDN Quick Try (Plain HTML)
+
+For single-file HTML prototypes or sandboxes without a bundler, load the theme and fonts from jsDelivr and ESM modules from `esm.sh`:
+
+```html
+<!doctype html>
+<html lang="en" data-theme="system" class="lustrous-root">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ghchinoy/lustrous-lit@0.1.0/fonts/lustrous-fonts.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ghchinoy/lustrous-lit@0.1.0/dist/lustrous-theme.css" />
+    <script type="module">
+      import "https://esm.sh/@ghchinoy/lustrous-lit@0.1.0/components/lustrous-flex";
+      import "https://esm.sh/@ghchinoy/lustrous-lit@0.1.0/components/lustrous-text";
+      import "https://esm.sh/@ghchinoy/lustrous-lit@0.1.0/components/lustrous-button";
+    </script>
+  </head>
+  <body>
+    <lustrous-flex direction="column" gap="m" padding="2xl" max-width="440">
+      <lustrous-text variant="headline-small" heading="1">Hello Lustrous</lustrous-text>
+      <lustrous-button icon="bolt">Get Started</lustrous-button>
+    </lustrous-flex>
+  </body>
+</html>
 ```
 
 ---
