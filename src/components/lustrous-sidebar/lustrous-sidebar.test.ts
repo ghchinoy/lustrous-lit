@@ -121,4 +121,63 @@ describe("lustrous-sidebar", () => {
       await setViewport(1200, 800);
     }
   });
+
+  it("supports compact-panel density, surface-tone, leading-back header, pill-badge, collapsed unread dot, and inline rename", async () => {
+    const wrap = await fixture<HTMLElement>(`<div style="height: 500px; width: 320px;">
+      <lustrous-sidebar density="compact-panel" surface-tone="surface" label="Panel">
+        <lustrous-sidebar-header label="Threads" dismiss-variant="leading-back"></lustrous-sidebar-header>
+        <lustrous-sidebar-nav>
+          <lustrous-sidebar-scroll-area>
+            <lustrous-sidebar-item id="t1" icon="docs" label="Architecture" pill-badge="New" badge="unread"></lustrous-sidebar-item>
+          </lustrous-sidebar-scroll-area>
+        </lustrous-sidebar-nav>
+      </lustrous-sidebar>
+    </div>`);
+    const sb = wrap.querySelector<LustrousSidebar>("lustrous-sidebar")!;
+    const header = wrap.querySelector("lustrous-sidebar-header")!;
+    const scrollArea = wrap.querySelector("lustrous-sidebar-scroll-area")!;
+    const itemEl = wrap.querySelector<LustrousSidebarItem>("#t1")!;
+    await Promise.all([sb.updateComplete, header.updateComplete, scrollArea.updateComplete, itemEl.updateComplete]);
+
+    expect(css(row(itemEl), "height")).toBe("40px");
+    expect(scrollArea.shadowRoot!.querySelector("lustrous-scrollable-box")!.getAttribute("scrim-size")).toBe("16");
+    expect(itemEl.shadowRoot!.querySelector("lustrous-badge")!.textContent).toBe("New");
+    expect(header.shadowRoot!.querySelector(".leading-back")).not.toBeNull();
+    expect(header.shadowRoot!.querySelector<HTMLElement>(".logo")!.hidden).toBe(true);
+
+    // Inline rename commit & cancel
+    const commits: string[] = [];
+    const cancels = vi.fn();
+    itemEl.addEventListener("lustrous-edit-commit", (e) => commits.push((e as CustomEvent<{ value: string }>).detail.value));
+    itemEl.addEventListener("lustrous-edit-cancel", cancels);
+
+    itemEl.editing = true;
+    await itemEl.updateComplete;
+    const input = itemEl.shadowRoot!.querySelector<HTMLInputElement>("[part=edit-input]")!;
+    expect(input).not.toBeNull();
+    expect(itemEl.shadowRoot!.activeElement).toBe(input);
+
+    await userEvent.keyboard("{Escape}");
+    await itemEl.updateComplete;
+    expect(cancels).toHaveBeenCalledTimes(1);
+    expect(itemEl.editing).toBe(false);
+    await expect.poll(() => itemEl.shadowRoot!.activeElement).toBe(row(itemEl));
+
+    itemEl.editing = true;
+    await itemEl.updateComplete;
+    const input2 = itemEl.shadowRoot!.querySelector<HTMLInputElement>("[part=edit-input]")!;
+    input2.value = "Updated Title";
+    input2.dispatchEvent(new Event("input", { bubbles: true }));
+    await userEvent.keyboard("{Enter}");
+    await itemEl.updateComplete;
+    expect(commits).toEqual(["Updated Title"]);
+    expect(itemEl.editing).toBe(false);
+
+    // Collapsed corner unread badge & leading-back collapse
+    header.shadowRoot!.querySelector<HTMLElement>(".leading-back")!.shadowRoot!.querySelector("button")!.click();
+    await sb.updateComplete;
+    await itemEl.updateComplete;
+    expect(sb.collapsed).toBe(true);
+    expect(itemEl.shadowRoot!.querySelector(".collapsed-unread")).not.toBeNull();
+  });
 });

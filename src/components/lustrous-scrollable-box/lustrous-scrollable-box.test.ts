@@ -12,4 +12,16 @@ describe("lustrous-scrollable-box", () => {
     expect(el.scrollElement.getAttribute("role")).toBe("region");
     expect(el.scrollElement.getAttribute("aria-label")).toBe("Logs");
   });
+
+  it("applies scrim-size per viewport without leaking into nested scroll boxes", async () => {
+    const outer = await fixture<LustrousScrollableBox>(
+      `<lustrous-scrollable-box height="100" scrim-size="16">
+        <lustrous-scrollable-box id="inner" height="60"><div style="height: 200px">Inner</div></lustrous-scrollable-box>
+      </lustrous-scrollable-box>`,
+    );
+    const inner = outer.querySelector<LustrousScrollableBox>("#inner")!;
+    await inner.updateComplete;
+    expect(outer.scrollElement.style.getPropertyValue("--_lustrous-scrim-size")).toBe("16px");
+    expect(inner.scrollElement.style.getPropertyValue("--_lustrous-scrim-size")).toBe("36px");
+  });
 });

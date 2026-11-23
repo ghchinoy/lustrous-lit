@@ -1,6 +1,6 @@
 {
   "name": "@ghchinoy/lustrous-lit",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Lustrous Design System for Lit 3 web components: theme tokens, typography, bundled fonts, layout primitives, accessible form controls, and top-layer overlays.",
   "license": "Apache-2.0",
   "repository": {

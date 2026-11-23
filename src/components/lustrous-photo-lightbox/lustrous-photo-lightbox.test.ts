@@ -97,4 +97,32 @@ describe("lustrous-photo-lightbox", () => {
     el.open = false;
     await el.updateComplete;
   });
+
+  it("supports rounded stage and gallery navigation controls + ArrowLeft/ArrowRight shortcuts", async () => {
+    const { el } = await make(`src="${SVG}" rounded`);
+    const onPrevious = vi.fn();
+    const onNext = vi.fn();
+    el.navigation = { previousLabel: "Previous photo", nextLabel: "Next photo", onPrevious, onNext };
+    el.open = true;
+    await el.updateComplete;
+
+    expect(css(stage(el), "border-top-left-radius")).toBe("14px");
+    const prevBtn = el.shadowRoot!.querySelector<HTMLElement>("[part=previous-button]")!;
+    const nextBtn = el.shadowRoot!.querySelector<HTMLElement>("[part=next-button]")!;
+    expect(prevBtn.getAttribute("aria-label")).toBe("Previous photo");
+    expect(nextBtn.getAttribute("aria-label")).toBe("Next photo");
+
+    nextBtn.shadowRoot!.querySelector("button")!.click();
+    prevBtn.shadowRoot!.querySelector("button")!.click();
+    expect(onNext).toHaveBeenCalledTimes(1);
+    expect(onPrevious).toHaveBeenCalledTimes(1);
+
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
+    expect(onNext).toHaveBeenCalledTimes(2);
+    expect(onPrevious).toHaveBeenCalledTimes(2);
+
+    el.open = false;
+    await el.updateComplete;
+  });
 });

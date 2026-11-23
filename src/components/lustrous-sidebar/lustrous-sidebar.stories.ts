@@ -65,3 +65,22 @@ export const MobileDrawer: StoryObj = {
     </div>
   `,
 };
+
+export const CompactPanel: StoryObj = {
+  render: () => html`
+    <div style="height: 460px; width: 320px; background: var(--lustrous-color-background);">
+      <lustrous-sidebar density="compact-panel" surface-tone="surface" label="Compact panel sidebar">
+        <lustrous-sidebar-header label="Workspace" dismiss-variant="leading-back">
+          <lustrous-icon-button slot="actions" size="s" icon="add" aria-label="New thread"></lustrous-icon-button>
+        </lustrous-sidebar-header>
+        <lustrous-sidebar-nav label="Compact navigation">
+          <lustrous-sidebar-scroll-area>
+            <lustrous-sidebar-item icon="home" label="Overview" active></lustrous-sidebar-item>
+            <lustrous-sidebar-item icon="docs" label="Design review" pill-badge="Beta"></lustrous-sidebar-item>
+            <lustrous-sidebar-item icon="folder" label="Token audit" meta="12m"></lustrous-sidebar-item>
+          </lustrous-sidebar-scroll-area>
+        </lustrous-sidebar-nav>
+      </lustrous-sidebar>
+    </div>
+  `,
+};

@@ -17,9 +17,18 @@ Mobile-first modal bottom sheet extending `<lustrous-modal>`. Supports `0.5` pee
 | `open` | `boolean` | `false` | Opens or closes the modal sheet. |
 | `expanded` | `boolean` | `false` | Expands tall content beyond the 50% peek snap point. |
 | `default-snap-point` | `0.5 \| 1` | `0.5` | Initial snap fraction when opened. |
+| `scrollable` | `boolean` | `true` | Wraps default body slot inside `<lustrous-scrollable-box>` (set `scrollable="false"` to opt out). |
+| `body-scrim` | `"both" \| "start" \| "end" \| "none"` | `"both"` | Edge scrim fade applied to the scrollable body container. |
 | `label` | `string` | `"Bottom sheet"` | Accessible name applied to the modal `<dialog>`. |
 | `returnFocus` | `HTMLElement \| null` | `undefined` | Element focused when the sheet closes (property only). |
-| `initialFocus` | `HTMLElement \| null` | `undefined` | Element focused when the sheet opens (property only). |
+| `initialFocus` | `HTMLElement \| (() => HTMLElement \| null \| undefined) \| null` | `undefined` | Element (or resolver) focused when the sheet opens (property only). |
+
+## Slots
+
+- Default slot — Sheet body content.
+- `header` — Fixed header rendered above the scrollable body.
+- `footer` — Fixed footer rendered below the scrollable body.
+- `trigger` — Optional trigger element that opens the sheet on click.
 
 ## Events
 

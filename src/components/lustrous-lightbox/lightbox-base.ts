@@ -10,6 +10,14 @@ import "../lustrous-skeleton/lustrous-skeleton.js";
 const MAX_STAGE_HEIGHT = "calc(100vh - 180px)";
 const PLACEHOLDER_SIZE = `min(${MAX_STAGE_HEIGHT}, calc(100vw - 128px))`;
 
+/** Previous/next gallery navigation configuration for `<lustrous-photo-lightbox>` and `<lustrous-video-lightbox>`. */
+export interface LustrousLightboxNavigation {
+  previousLabel: string;
+  nextLabel: string;
+  onPrevious?: () => void;
+  onNext?: () => void;
+}
+
 /**
  * Shared full-screen media frame for `<lustrous-photo-lightbox>` and `<lustrous-video-lightbox>`.
  *
@@ -60,6 +68,12 @@ export class LustrousLightboxBase extends LustrousModal {
         border-radius: var(--lustrous-radius-m);
         object-fit: contain;
       }
+      :host([rounded]) .stage > img,
+      :host([rounded]) .stage > video,
+      :host([rounded]) .stage {
+        border-radius: var(--lustrous-radius-l);
+        overflow: hidden;
+      }
       .stage > .hidden {
         display: none;
       }
@@ -95,9 +109,27 @@ export class LustrousLightboxBase extends LustrousModal {
         inset-inline-start: var(--lustrous-space-3xl);
         pointer-events: auto;
       }
+      .nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: auto;
+      }
+      .nav-prev {
+        inset-inline-start: var(--lustrous-space-l);
+      }
+      .nav-next {
+        inset-inline-end: var(--lustrous-space-l);
+      }
       @media (max-width: 768px) {
         .back {
           inset-inline-start: var(--lustrous-space-m);
+        }
+        .nav-prev {
+          inset-inline-start: var(--lustrous-space-s);
+        }
+        .nav-next {
+          inset-inline-end: var(--lustrous-space-s);
         }
       }
       @media (forced-colors: active) {
@@ -112,15 +144,56 @@ export class LustrousLightboxBase extends LustrousModal {
   @property() heading = "";
   /** Accessible label for the close button (defaults to `getLustrousLabels().close`). */
   @property({ attribute: "close-label" }) closeLabel = "";
+  /** Applies a larger `l` (`14px`) corner radius to the media stage. */
+  @property({ type: Boolean, reflect: true }) rounded = false;
+  /** Optional previous/next gallery navigation controls and RTL-aware ArrowLeft/ArrowRight shortcuts. */
+  @property({ attribute: false }) navigation?: LustrousLightboxNavigation;
 
   @state() protected loaded = false;
   @state() protected failed = false;
+  private navKeyBound = false;
 
   constructor() {
     super();
     this.scrim = "immersive";
     this.scrimBlur = true;
   }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.detachNavKeys();
+  }
+
+  protected override updated(changed: PropertyValues): void {
+    super.updated(changed);
+    if (this.open && this.navigation) this.attachNavKeys();
+    else this.detachNavKeys();
+  }
+
+  private attachNavKeys(): void {
+    if (this.navKeyBound || typeof document === "undefined") return;
+    document.addEventListener("keydown", this.onNavKeydown, { capture: true });
+    this.navKeyBound = true;
+  }
+
+  private detachNavKeys(): void {
+    if (!this.navKeyBound || typeof document === "undefined") return;
+    document.removeEventListener("keydown", this.onNavKeydown, { capture: true });
+    this.navKeyBound = false;
+  }
+
+  private onNavKeydown = (e: KeyboardEvent): void => {
+    if (!this.open || !this.navigation || e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    const active = LustrousModal.deepActive();
+    if (active && (active.tagName === "VIDEO" || active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
+    const rtl = getComputedStyle(this).direction === "rtl";
+    const isPrev = rtl ? e.key === "ArrowRight" : e.key === "ArrowLeft";
+    const handler = isPrev ? this.navigation.onPrevious : this.navigation.onNext;
+    if (!handler) return;
+    e.preventDefault();
+    handler();
+  };
 
   protected override willUpdate(changed: PropertyValues): void {
     super.willUpdate(changed);
@@ -185,6 +258,26 @@ export class LustrousLightboxBase extends LustrousModal {
           aria-label=${this.closeLabel || getLustrousLabels().close}
           @click=${() => this.requestClose("dismiss")}
         ></lustrous-icon-button>
+        ${this.navigation?.onPrevious
+          ? html`<lustrous-icon-button
+              part="previous-button"
+              class="nav nav-prev"
+              variant="tonal"
+              icon="chevronLeft"
+              aria-label=${this.navigation.previousLabel}
+              @click=${() => this.navigation?.onPrevious?.()}
+            ></lustrous-icon-button>`
+          : nothing}
+        ${this.navigation?.onNext
+          ? html`<lustrous-icon-button
+              part="next-button"
+              class="nav nav-next"
+              variant="tonal"
+              icon="chevronRight"
+              aria-label=${this.navigation.nextLabel}
+              @click=${() => this.navigation?.onNext?.()}
+            ></lustrous-icon-button>`
+          : nothing}
       </dialog>`;
   }
 }

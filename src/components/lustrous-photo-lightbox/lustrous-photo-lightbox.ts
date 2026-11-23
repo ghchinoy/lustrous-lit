@@ -1,6 +1,7 @@
 import { html, nothing, type PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { LustrousLightboxBase } from "../lustrous-lightbox/lightbox-base.js";
+import { LustrousLightboxBase, type LustrousLightboxNavigation } from "../lustrous-lightbox/lightbox-base.js";
+export type { LustrousLightboxNavigation };
 
 /**
  * `<lustrous-photo-lightbox>` — Full-screen immersive image lightbox built on `LustrousLightboxBase`.

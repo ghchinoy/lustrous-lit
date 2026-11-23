@@ -23,12 +23,12 @@ Collapsible application navigation shell (`272px` expanded ↔ `56px` collapsed)
 
 ## Elements
 
-- `<lustrous-sidebar>` — Root `complementary` shell (`collapsed`, `width`, `collapsed-width`, `label`; fires cancelable `lustrous-change` `{ collapsed }`).
-- `<lustrous-sidebar-header>` — 56px brand bar (`label`, `logo-href`, `collapse-label`, `expand-label`, `slot="logo"`, `slot="actions"`).
+- `<lustrous-sidebar>` — Root `complementary` shell (`collapsed`, `density="default | compact-panel | mobile"`, `surface-tone="surface | surface-bright"`, `width`, `collapsed-width`, `label`; fires cancelable `lustrous-change` `{ collapsed }`).
+- `<lustrous-sidebar-header>` — 56px brand bar (`52px` in `compact-panel`; `label`, `logo-href`, `dismiss-variant="trailing-close | leading-back"`, `collapse-label`, `expand-label`, `slot="logo"`, `slot="actions"`).
 - `<lustrous-sidebar-nav>` — Semantic `<nav>` container (`label`).
-- `<lustrous-sidebar-scroll-area>` — Scrollable list wrapper that resets smoothly on collapse.
+- `<lustrous-sidebar-scroll-area>` — Scrollable list wrapper (`scrim-size="16"`) that resets smoothly on collapse.
 - `<lustrous-sidebar-section>` — Titled or `collapsible` disclosure group (`heading`, `expanded`, `slot="action"`).
-- `<lustrous-sidebar-item>` — Navigation row with `badge` (`"unread" | "needs-input" | "in-progress"`), `pinned`, `pending`, `.actions` overflow `<lustrous-menu>`, `.items` flyout `<lustrous-menu>`, and collapsed/truncation `<lustrous-tooltip>`.
+- `<lustrous-sidebar-item>` — Navigation row with `badge` (`"unread" | "needs-input" | "in-progress"`, with collapsed corner unread dot), `pill-badge` / `slot="badge"`, inline rename (`editing`, `default-edit-value`, `max-edit-length`, `edit-input-label`, `lustrous-edit-commit`, `lustrous-edit-cancel`), `pinned`, `pending`, `.actions` overflow `<lustrous-menu>`, `.items` flyout `<lustrous-menu>`, and collapsed/truncation `<lustrous-tooltip>`.
 - `<lustrous-sidebar-message>` — Empty/error status block with optional polite `announcement`.
 - `<lustrous-sidebar-footer>` — Bottom-docked item stack.
 - `<lustrous-sidebar-drawer>` — Slide-in modal drawer extending `<lustrous-modal>` for viewports below `960px`.

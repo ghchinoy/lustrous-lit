@@ -2028,8 +2028,12 @@
           "name": "LustrousBanner",
           "cssParts": [
             {
-              "description": "The `<section>` banner surface.",
+              "description": "The `<section>` banner container.",
               "name": "banner"
+            },
+            {
+              "description": "The interactive `<button>` surface when `clickable` is set.",
+              "name": "surface"
             }
           ],
           "slots": [
@@ -2183,6 +2187,17 @@
             },
             {
               "kind": "field",
+              "name": "clickable",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Makes the entire banner surface a keyboard-operable `<button>` firing `lustrous-click`.",
+              "attribute": "clickable",
+              "reflects": true
+            },
+            {
+              "kind": "field",
               "name": "dismissible",
               "type": {
                 "text": "boolean"
@@ -2226,6 +2241,11 @@
             },
             {
               "kind": "method",
+              "name": "onSurfaceClick",
+              "privacy": "private"
+            },
+            {
+              "kind": "method",
               "name": "onClose",
               "privacy": "private"
             },
@@ -2255,6 +2275,13 @@
                 "text": "CustomEvent"
               },
               "description": "`CustomEvent<{ action: \"primary\" | \"secondary\" }>`."
+            },
+            {
+              "name": "lustrous-click",
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "`CustomEvent<void>` when `clickable` is set and the banner surface is activated."
             },
             {
               "description": "`CustomEvent<{ reason: \"dismiss\" }>` (cancelable; hides the banner unless canceled).",
@@ -2386,6 +2413,15 @@
               "fieldName": "secondaryAction"
             },
             {
+              "name": "clickable",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Makes the entire banner surface a keyboard-operable `<button>` firing `lustrous-click`.",
+              "fieldName": "clickable"
+            },
+            {
               "name": "dismissible",
               "type": {
                 "text": "boolean"
@@ -2465,8 +2501,16 @@
               "name": "handle"
             },
             {
-              "description": "The scrollable content container.",
+              "description": "Optional fixed header slot wrapper.",
+              "name": "header"
+            },
+            {
+              "description": "The scrollable content container (`<lustrous-scrollable-box>` when `scrollable`, otherwise `<div>`).",
               "name": "body"
+            },
+            {
+              "description": "Optional fixed footer slot wrapper.",
+              "name": "footer"
             }
           ],
           "slots": [
@@ -2477,6 +2521,14 @@
                 "name": "LustrousModal",
                 "module": "src/components/lustrous-modal/lustrous-modal.ts"
               }
+            },
+            {
+              "description": "Optional fixed header rendered above the scrollable body.",
+              "name": "header"
+            },
+            {
+              "description": "Optional fixed footer rendered below the scrollable body.",
+              "name": "footer"
             },
             {
               "description": "Optional trigger element that opens the sheet on click.",
@@ -2512,6 +2564,28 @@
             },
             {
               "kind": "field",
+              "name": "scrollable",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "Wraps default slot body content in `<lustrous-scrollable-box>`. Set `scrollable=\"false\"` to manage scrolling manually.",
+              "attribute": "scrollable",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "bodyScrim",
+              "type": {
+                "text": "LustrousScrollableBoxScrim"
+              },
+              "default": "\"both\"",
+              "description": "Edge scrim fade applied to `<lustrous-scrollable-box>` when `scrollable` is true.",
+              "attribute": "body-scrim",
+              "reflects": true
+            },
+            {
+              "kind": "field",
               "name": "sheet",
               "type": {
                 "text": "HTMLElement"
@@ -2530,6 +2604,24 @@
             {
               "kind": "field",
               "name": "dragging",
+              "type": {
+                "text": "boolean"
+              },
+              "privacy": "private",
+              "default": "false"
+            },
+            {
+              "kind": "field",
+              "name": "hasHeader",
+              "type": {
+                "text": "boolean"
+              },
+              "privacy": "private",
+              "default": "false"
+            },
+            {
+              "kind": "field",
+              "name": "hasFooter",
               "type": {
                 "text": "boolean"
               },
@@ -2756,7 +2848,7 @@
               "kind": "field",
               "name": "initialFocus",
               "type": {
-                "text": "HTMLElement | null | undefined"
+                "text": "HTMLElement | (() => HTMLElement | null | undefined) | null | undefined"
               },
               "inheritedFrom": {
                 "name": "LustrousModal",
@@ -2880,7 +2972,7 @@
             {
               "kind": "method",
               "name": "deepActive",
-              "privacy": "private",
+              "privacy": "protected",
               "static": true,
               "return": {
                 "type": {
@@ -3067,6 +3159,24 @@
               "default": "0.5",
               "description": "Snap point used when opening: `0.5` peeks at half the viewport height for tall content,\nwhile `1` opens fully expanded.",
               "fieldName": "defaultSnapPoint"
+            },
+            {
+              "name": "scrollable",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "true",
+              "description": "Wraps default slot body content in `<lustrous-scrollable-box>`. Set `scrollable=\"false\"` to manage scrolling manually.",
+              "fieldName": "scrollable"
+            },
+            {
+              "name": "body-scrim",
+              "type": {
+                "text": "LustrousScrollableBoxScrim"
+              },
+              "default": "\"both\"",
+              "description": "Edge scrim fade applied to `<lustrous-scrollable-box>` when `scrollable` is true.",
+              "fieldName": "bodyScrim"
             },
             {
               "name": "open",
@@ -4137,7 +4247,7 @@
           "type": {
             "text": "array"
           },
-          "default": "[ lustrousBase, lustrousFocusRing, lustrousStateLayer, css` :host { display: inline-flex; vertical-align: middle; } .btn { all: unset; box-sizing: border-box; position: relative; isolation: isolate; display: inline-flex; align-items: center; justify-content: center; gap: var(--lustrous-space-s); width: 100%; border-radius: var(--lustrous-radius-m); cursor: pointer; user-select: none; white-space: nowrap; text-decoration: none; transition: border-radius 180ms ease, box-shadow 180ms ease, background-color 180ms ease, border-color 180ms ease, color 180ms ease; ${lustrousType(\"body-medium-emphasized\")} } .shape-pill { border-radius: var(--lustrous-radius-full); } .variant-accent { --lustrous-text-muted: var(--lustrous-color-on-accent); background-color: var(--lustrous-color-accent); color: var(--lustrous-color-on-accent); } .variant-tonal { --lustrous-text-muted: var(--lustrous-color-on-surface-variant); background-color: var(--lustrous-color-surface-container-high); color: var(--lustrous-color-on-surface); } .variant-outline { --lustrous-text-muted: var(--lustrous-color-on-surface-variant); background-color: transparent; border: 1px solid var(--lustrous-color-outline); color: var(--lustrous-color-on-surface); } .variant-bright { --lustrous-text-muted: var(--lustrous-color-on-surface-variant); background-color: var(--lustrous-color-surface-bright); color: var(--lustrous-color-on-surface); box-shadow: var(--lustrous-elevation-level1); } .variant-on-surface { background-color: transparent; color: inherit; } .variant-on-surface-variant { background-color: transparent; color: var(--lustrous-color-on-surface-variant); } .variant-translucent { --lustrous-text-muted: var(--lustrous-color-on-surface-variant); background-color: color-mix(in srgb, var(--lustrous-color-surface) 65%, transparent); color: var(--lustrous-color-on-surface); backdrop-filter: blur(32px); } .btn.selected { background-color: var(--lustrous-color-accent-container); color: var(--lustrous-color-on-accent-container); } .btn.muted:not(.disabled) { color: var(--lustrous-text-muted); } .btn.disabled { --lustrous-text-muted: var(--lustrous-color-state-disabled-label); cursor: default; pointer-events: none; color: var(--lustrous-color-state-disabled-label); box-shadow: none; } .btn.disabled.variant-accent, .btn.disabled.variant-tonal, .btn.disabled.variant-bright, .btn.disabled.selected { background-color: var(--lustrous-color-state-disabled); } .btn.disabled.variant-outline { border-color: var(--lustrous-color-state-disabled); } @media (forced-colors: active) { .btn::before { content: \"\"; position: absolute; inset: 0; border: 1px solid currentColor; border-radius: inherit; pointer-events: none; } .btn.selected { background-color: Highlight; color: HighlightText; } .btn.selected::before { border-color: Highlight; } .btn.disabled, .btn.disabled.selected { background-color: Canvas; color: GrayText; } .btn.disabled::before { border-color: GrayText; } } `, lustrousChevronStyles, ]",
+          "default": "[ lustrousBase, lustrousFocusRing, lustrousStateLayer, css` :host { display: inline-flex; vertical-align: middle; } .btn { all: unset; box-sizing: border-box; position: relative; isolation: isolate; display: inline-flex; align-items: center; justify-content: center; gap: var(--lustrous-space-s); width: 100%; border-radius: var(--lustrous-radius-m); cursor: pointer; user-select: none; white-space: nowrap; text-decoration: none; transition: border-radius 180ms ease, box-shadow 180ms ease, background-color 180ms ease, border-color 180ms ease, color 180ms ease; ${lustrousType(\"body-medium-emphasized\")} } .shape-pill { border-radius: var(--lustrous-radius-full); } .variant-primary { --lustrous-text-muted: color-mix(in srgb, var(--lustrous-color-on-primary) 80%, transparent); background-color: var(--lustrous-color-primary); color: var(--lustrous-color-on-primary); } .variant-primary.focus-ring:focus-visible { outline-color: var(--lustrous-color-on-surface); } .variant-accent { --lustrous-text-muted: var(--lustrous-color-on-accent); background-color: var(--lustrous-color-accent); color: var(--lustrous-color-on-accent); } .variant-tonal { --lustrous-text-muted: var(--lustrous-color-on-surface-variant); background-color: var(--lustrous-color-surface-container-high); color: var(--lustrous-color-on-surface); } .variant-outline { --lustrous-text-muted: var(--lustrous-color-on-surface-variant); background-color: transparent; border: 1px solid var(--lustrous-color-outline); color: var(--lustrous-color-on-surface); } .variant-bright { --lustrous-text-muted: var(--lustrous-color-on-surface-variant); background-color: var(--lustrous-color-surface-bright); color: var(--lustrous-color-on-surface); box-shadow: var(--lustrous-elevation-level1); } .variant-on-surface { background-color: transparent; color: inherit; } .variant-on-surface-variant { background-color: transparent; color: var(--lustrous-color-on-surface-variant); } .variant-translucent { --lustrous-text-muted: var(--lustrous-color-on-surface-variant); background-color: color-mix(in srgb, var(--lustrous-color-surface) 65%, transparent); color: var(--lustrous-color-on-surface); backdrop-filter: blur(32px); } .btn.selected { background-color: var(--lustrous-color-accent-container); color: var(--lustrous-color-on-accent-container); } .btn.muted:not(.disabled) { color: var(--lustrous-text-muted); } .btn.disabled { --lustrous-text-muted: var(--lustrous-color-state-disabled-label); cursor: default; pointer-events: none; color: var(--lustrous-color-state-disabled-label); box-shadow: none; } .btn.disabled.variant-primary, .btn.disabled.variant-accent, .btn.disabled.variant-tonal, .btn.disabled.variant-bright, .btn.disabled.selected { background-color: var(--lustrous-color-state-disabled); } .btn.disabled.variant-outline { border-color: var(--lustrous-color-state-disabled); } @media (forced-colors: active) { .btn::before { content: \"\"; position: absolute; inset: 0; border: 1px solid currentColor; border-radius: inherit; pointer-events: none; } .btn.selected { background-color: Highlight; color: HighlightText; } .btn.selected::before { border-color: Highlight; } .btn.disabled, .btn.disabled.selected { background-color: Canvas; color: GrayText; } .btn.disabled::before { border-color: GrayText; } } `, lustrousChevronStyles, ]",
           "description": "Shared styles for button-like elements (`lustrous-button`, `lustrous-icon-button`, togglable buttons)."
         },
         {
@@ -4436,7 +4546,7 @@
       "declarations": [
         {
           "kind": "class",
-          "description": "`<lustrous-button>` — Primary and secondary action button.\n\n- Variants: `accent` (default), `tonal`, `outline`, `bright`, `on-surface`, `on-surface-variant`, `translucent`\n- Sizes: `m` (44px, default), `s` (36px), `xs` (28px)\n- Shapes: `rounded` (10px, default), `pill`\n- Form-associated (`type=\"submit\" | \"reset\"`) and link-capable (`href`).",
+          "description": "`<lustrous-button>` — Primary and secondary action button.\n\n- Variants: `primary`, `accent` (default), `tonal`, `outline`, `bright`, `on-surface`, `on-surface-variant`, `translucent`\n- Sizes: `m` (44px, default), `s` (36px; 44px min touch target at `<= 768px`), `xs` (28px)\n- Shapes: `rounded` (10px, default), `pill`\n- Form-associated (`type=\"submit\" | \"reset\"`) and link-capable (`href`).",
           "name": "LustrousButton",
           "cssParts": [
             {
@@ -6983,6 +7093,39 @@
             },
             {
               "kind": "field",
+              "name": "mobileDrawer",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Renders modal dialogs inside a `<lustrous-bottom-sheet default-snap-point=\"1\">` at `<= 768px`.",
+              "attribute": "mobile-drawer",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "scrimBlur",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Blurs the modal backdrop scrim (`backdrop-filter: blur`).",
+              "attribute": "scrim-blur",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "focusHeading",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Makes the `<h2>` heading focusable (`tabindex=\"-1\"`) and focuses it on open when `initialFocus` is unset.",
+              "attribute": "focus-heading",
+              "reflects": true
+            },
+            {
+              "kind": "field",
               "name": "returnFocus",
               "type": {
                 "text": "HTMLElement | null | undefined"
@@ -6992,7 +7135,7 @@
               "kind": "field",
               "name": "initialFocus",
               "type": {
-                "text": "HTMLElement | null | undefined"
+                "text": "HTMLElement | (() => HTMLElement | null | undefined) | null | undefined"
               }
             },
             {
@@ -7013,6 +7156,22 @@
               },
               "privacy": "private",
               "default": "false"
+            },
+            {
+              "kind": "field",
+              "name": "mobile",
+              "privacy": "private",
+              "readonly": true,
+              "default": "new LustrousMediaController(this, breakpoints.mobile)"
+            },
+            {
+              "kind": "field",
+              "name": "headingElement",
+              "type": {
+                "text": "HTMLHeadingElement | null"
+              },
+              "description": "The rendered `<h2>` heading element (useful for programmatic focus management).",
+              "readonly": true
             },
             {
               "kind": "method",
@@ -7082,6 +7241,54 @@
                   "name": "e",
                   "type": {
                     "text": "CustomEvent<{ open: boolean }>"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderHeading",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "TemplateResult"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "showClose",
+                  "type": {
+                    "text": "boolean"
+                  }
+                },
+                {
+                  "name": "cls",
+                  "type": {
+                    "text": "string"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderActions",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "TemplateResult"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "hasActions",
+                  "type": {
+                    "text": "boolean"
+                  }
+                },
+                {
+                  "name": "cls",
+                  "type": {
+                    "text": "string"
                   }
                 }
               ]
@@ -7202,6 +7409,33 @@
               },
               "default": "false",
               "fieldName": "modal"
+            },
+            {
+              "name": "mobile-drawer",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Renders modal dialogs inside a `<lustrous-bottom-sheet default-snap-point=\"1\">` at `<= 768px`.",
+              "fieldName": "mobileDrawer"
+            },
+            {
+              "name": "scrim-blur",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Blurs the modal backdrop scrim (`backdrop-filter: blur`).",
+              "fieldName": "scrimBlur"
+            },
+            {
+              "name": "focus-heading",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Makes the `<h2>` heading focusable (`tabindex=\"-1\"`) and focuses it on open when `initialFocus` is unset.",
+              "fieldName": "focusHeading"
             },
             {
               "name": "open",
@@ -14098,7 +14332,7 @@
           "type": {
             "text": "readonly LustrousCoreIconName[]"
           },
-          "default": "[ \"activity\", \"add\", \"addImage\", \"archive\", \"arrowBack\", \"arrowCircleDown\", \"arrowDownward\", \"arrowDropDown\", \"arrowForward\", \"arrowForwardIos\", \"arrowOutward\", \"arrowUpward\", \"aspectRatio\", \"attachMoney\", \"avatar\", \"bell\", \"bolt\", \"book\", \"bookmark\", \"brush\", \"building\", \"calendar\", \"cancel\", \"check\", \"checkBox\", \"checkBoxOutlineBlank\", \"checkCircle\", \"checkSmall\", \"chevronDown\", \"chevronLeft\", \"chevronRight\", \"chevronRightAlt\", \"chevronUp\", \"clock\", \"close\", \"cloud\", \"cloudDone\", \"cloudOff\", \"code\", \"codeOff\", \"compass\", \"contrast\", \"copy\", \"cropLandscape\", \"cropPortrait\", \"cropSquare\", \"darkMode\", \"database\", \"delete\", \"devices\", \"docs\", \"domain\", \"download\", \"draw\", \"edit\", \"encrypted\", \"error\", \"event\", \"explore\", \"extension\", \"favorite\", \"features\", \"filter\", \"filterAlt\", \"filterList\", \"finance\", \"flag\", \"folder\", \"folderOpen\", \"formatBold\", \"formatItalic\", \"formatListBulleted\", \"formatListNumbered\", \"formatUnderlined\", \"globe\", \"grid\", \"group\", \"groups\", \"headset\", \"helpOutline\", \"hideImage\", \"home\", \"hourglassEmpty\", \"info\", \"keyboard\", \"label\", \"language\", \"layers\", \"lightbulb\", \"lightMode\", \"link\", \"locationOn\", \"lock\", \"mail\", \"megaphone\", \"menu\", \"menuBook\", \"mic\", \"micOff\", \"modeAuto\", \"moreHoriz\", \"moreVert\", \"networkNode\", \"newReleases\", \"note\", \"notes\", \"openInNew\", \"package\", \"palette\", \"pause\", \"pauseCircle\", \"person\", \"personAlert\", \"phone\", \"photo\", \"photoCamera\", \"photoLibrary\", \"picture\", \"pin\", \"place\", \"play\", \"playArrow\", \"playCircle\", \"plug\", \"progressActivity\", \"provisional\", \"redo\", \"refresh\", \"remove\", \"replay\", \"rocketLaunch\", \"route\", \"scale\", \"science\", \"search\", \"sell\", \"send\", \"settings\", \"settingsAlt\", \"share\", \"share2\", \"shield\", \"shuffle\", \"sideNav\", \"skipNext\", \"skipPrevious\", \"sliders\", \"star\", \"stop\", \"subdirectoryArrowRight\", \"subtitles\", \"sync\", \"target\", \"terminal\", \"timeline\", \"trendingDown\", \"trendingFlat\", \"trendingUp\", \"undo\", \"unlock\", \"unpin\", \"upload\", \"users\", \"verifiedUser\", \"visibility\", \"visibilityOff\", \"volumeOff\", \"volumeUp\", \"warning\", \"wifiOff\", \"work\", ]",
+          "default": "[ \"activity\", \"add\", \"addImage\", \"archive\", \"arrowBack\", \"arrowCircleDown\", \"arrowDownward\", \"arrowDropDown\", \"arrowForward\", \"arrowForwardIos\", \"arrowOutward\", \"arrowUpward\", \"aspectRatio\", \"attachMoney\", \"avatar\", \"bell\", \"bolt\", \"book\", \"bookmark\", \"brush\", \"building\", \"calendar\", \"cancel\", \"check\", \"checkBox\", \"checkBoxOutlineBlank\", \"checkCircle\", \"checkSmall\", \"chevronDown\", \"chevronLeft\", \"chevronRight\", \"chevronRightAlt\", \"chevronUp\", \"clock\", \"close\", \"cloud\", \"cloudDone\", \"cloudOff\", \"code\", \"codeOff\", \"compass\", \"contrast\", \"copy\", \"cropLandscape\", \"cropPortrait\", \"cropSquare\", \"darkMode\", \"database\", \"delete\", \"devices\", \"docs\", \"domain\", \"download\", \"draw\", \"edit\", \"encrypted\", \"error\", \"event\", \"explore\", \"extension\", \"favorite\", \"features\", \"filter\", \"filterAlt\", \"filterList\", \"finance\", \"flag\", \"folder\", \"folderOpen\", \"formatBold\", \"formatItalic\", \"formatListBulleted\", \"formatListNumbered\", \"formatUnderlined\", \"globe\", \"grid\", \"group\", \"groups\", \"headset\", \"helpOutline\", \"hideImage\", \"home\", \"hourglassEmpty\", \"info\", \"keyboard\", \"label\", \"language\", \"layers\", \"lightbulb\", \"lightMode\", \"link\", \"locationOn\", \"lock\", \"mail\", \"megaphone\", \"menu\", \"menuBook\", \"mic\", \"micOff\", \"modeAuto\", \"moreHoriz\", \"moreVert\", \"networkNode\", \"newReleases\", \"note\", \"notes\", \"openInNew\", \"package\", \"palette\", \"pause\", \"pauseCircle\", \"person\", \"personAlert\", \"phone\", \"photo\", \"photoCamera\", \"photoLibrary\", \"picture\", \"pin\", \"place\", \"play\", \"playArrow\", \"playCircle\", \"plug\", \"progressActivity\", \"provisional\", \"redo\", \"refresh\", \"remove\", \"replay\", \"rocketLaunch\", \"route\", \"scale\", \"science\", \"search\", \"sell\", \"send\", \"settings\", \"settingsAlt\", \"share\", \"share2\", \"shield\", \"shuffle\", \"sideNav\", \"skipNext\", \"skipPrevious\", \"sliders\", \"star\", \"stop\", \"subdirectoryArrowRight\", \"subtitles\", \"sync\", \"target\", \"terminal\", \"timeline\", \"trendingDown\", \"trendingFlat\", \"trendingUp\", \"undo\", \"unlock\", \"unpin\", \"upload\", \"users\", \"verifiedUser\", \"visibility\", \"visibilityOff\", \"volumeOff\", \"volumeUp\", \"warning\", \"wifiOff\", \"work\", \"arrowSplit\", \"assignment\", \"autorenew\", \"backspace\", \"bookmarkSpark\", \"chatPasteGo\", \"chatSpark2\", \"codeBlocks\", \"compareArrows\", \"contacts\", \"forward10\", \"health\", \"lassoSelect\", \"markChatRead\", \"markChatUnread\", \"public\", \"recordVoiceOver\", \"replay10\", \"searchActivity\", \"smartphone\", \"sms\", \"stopCircle\", \"tts\", \"voiceOverOff\", \"wallet\", ]",
           "description": "Built-in core icon names for docs, Storybook pickers, and tests."
         },
         {
@@ -14107,7 +14341,7 @@
           "type": {
             "text": "ReadonlySet<string>"
           },
-          "default": "new Set<string>([ \"arrowForward\", \"arrowBack\", \"chevronLeft\", \"chevronRight\", \"chevronRightAlt\", \"arrowForwardIos\", \"subdirectoryArrowRight\", \"sideNav\", \"send\", \"redo\", \"undo\", ])",
+          "default": "new Set<string>([ \"arrowForward\", \"arrowBack\", \"backspace\", \"chevronLeft\", \"chevronRight\", \"chevronRightAlt\", \"arrowForwardIos\", \"subdirectoryArrowRight\", \"sideNav\", \"send\", \"redo\", \"undo\", ])",
           "description": "Icons that point in the reading direction and mirror automatically in RTL."
         },
         {
@@ -16366,6 +16600,25 @@
             },
             {
               "kind": "field",
+              "name": "rounded",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Applies a larger `l` (`14px`) corner radius to the media stage.",
+              "attribute": "rounded",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "navigation",
+              "type": {
+                "text": "LustrousLightboxNavigation | undefined"
+              },
+              "description": "Optional previous/next gallery navigation controls and RTL-aware ArrowLeft/ArrowRight shortcuts."
+            },
+            {
+              "kind": "field",
               "name": "loaded",
               "type": {
                 "text": "boolean"
@@ -16381,6 +16634,40 @@
               },
               "privacy": "protected",
               "default": "false"
+            },
+            {
+              "kind": "field",
+              "name": "navKeyBound",
+              "type": {
+                "text": "boolean"
+              },
+              "privacy": "private",
+              "default": "false"
+            },
+            {
+              "kind": "method",
+              "name": "attachNavKeys",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "detachNavKeys",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "field",
+              "name": "onNavKeydown",
+              "privacy": "private"
             },
             {
               "kind": "method",
@@ -16513,7 +16800,7 @@
               "kind": "field",
               "name": "initialFocus",
               "type": {
-                "text": "HTMLElement | null | undefined"
+                "text": "HTMLElement | (() => HTMLElement | null | undefined) | null | undefined"
               },
               "inheritedFrom": {
                 "name": "LustrousModal",
@@ -16637,7 +16924,7 @@
             {
               "kind": "method",
               "name": "deepActive",
-              "privacy": "private",
+              "privacy": "protected",
               "static": true,
               "return": {
                 "type": {
@@ -16830,6 +17117,15 @@
               "default": "\"\"",
               "description": "Accessible label for the close button (defaults to `getLustrousLabels().close`).",
               "fieldName": "closeLabel"
+            },
+            {
+              "name": "rounded",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Applies a larger `l` (`14px`) corner radius to the media stage.",
+              "fieldName": "rounded"
             },
             {
               "name": "open",
@@ -19373,6 +19669,14 @@
             },
             {
               "kind": "field",
+              "name": "returnFocus",
+              "type": {
+                "text": "HTMLElement | null | undefined"
+              },
+              "description": "Explicit element focused when the menu closes via item selection (overrides returning focus to the trigger)."
+            },
+            {
+              "kind": "field",
               "name": "label",
               "type": {
                 "text": "string"
@@ -19430,6 +19734,15 @@
             },
             {
               "kind": "field",
+              "name": "hoverFirstClickAbsorbed",
+              "type": {
+                "text": "boolean"
+              },
+              "privacy": "private",
+              "default": "false"
+            },
+            {
+              "kind": "field",
               "name": "hoverTimer",
               "type": {
                 "text": "ReturnType<typeof setTimeout> | undefined"
@@ -19462,6 +19775,15 @@
               "name": "openSubs",
               "privacy": "private",
               "default": "new Set<string>()"
+            },
+            {
+              "kind": "field",
+              "name": "mobileStack",
+              "type": {
+                "text": "Array<{ path: string; label: string; items: LustrousMenuItem[] }>"
+              },
+              "privacy": "private",
+              "default": "[]"
             },
             {
               "kind": "field",
@@ -19805,6 +20127,95 @@
               "parameters": [
                 {
                   "name": "focusTrigger",
+                  "type": {
+                    "text": "boolean"
+                  }
+                },
+                {
+                  "name": "fromItemSelect",
+                  "default": "false"
+                }
+              ]
+            },
+            {
+              "kind": "field",
+              "name": "isMobileDrilldown",
+              "type": {
+                "text": "boolean"
+              },
+              "privacy": "private",
+              "readonly": true
+            },
+            {
+              "kind": "method",
+              "name": "findDefaultOpenSubmenu",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "Array<{ path: string; label: string; items: LustrousMenuItem[] }>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "items",
+                  "type": {
+                    "text": "LustrousMenuItem[]"
+                  }
+                },
+                {
+                  "name": "prefix",
+                  "default": "\"\""
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "drillInto",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "path",
+                  "type": {
+                    "text": "string"
+                  }
+                },
+                {
+                  "name": "label",
+                  "type": {
+                    "text": "string"
+                  }
+                },
+                {
+                  "name": "items",
+                  "type": {
+                    "text": "LustrousMenuItem[]"
+                  }
+                },
+                {
+                  "name": "focusFirst",
+                  "type": {
+                    "text": "boolean"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "drillBack",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "focusParent",
                   "type": {
                     "text": "boolean"
                   }
@@ -20403,7 +20814,7 @@
               "kind": "field",
               "name": "initialFocus",
               "type": {
-                "text": "HTMLElement | null | undefined"
+                "text": "HTMLElement | (() => HTMLElement | null | undefined) | null | undefined"
               }
             },
             {
@@ -20487,7 +20898,7 @@
             {
               "kind": "method",
               "name": "deepActive",
-              "privacy": "private",
+              "privacy": "protected",
               "static": true,
               "return": {
                 "type": {
@@ -20856,6 +21267,33 @@
             },
             {
               "kind": "field",
+              "name": "rounded",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Applies a larger `l` (`14px`) corner radius to the media stage.",
+              "attribute": "rounded",
+              "reflects": true,
+              "inheritedFrom": {
+                "name": "LustrousLightboxBase",
+                "module": "src/components/lustrous-lightbox/lightbox-base.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "navigation",
+              "type": {
+                "text": "LustrousLightboxNavigation | undefined"
+              },
+              "description": "Optional previous/next gallery navigation controls and RTL-aware ArrowLeft/ArrowRight shortcuts.",
+              "inheritedFrom": {
+                "name": "LustrousLightboxBase",
+                "module": "src/components/lustrous-lightbox/lightbox-base.ts"
+              }
+            },
+            {
+              "kind": "field",
               "name": "loaded",
               "type": {
                 "text": "boolean"
@@ -20875,6 +21313,56 @@
               },
               "privacy": "protected",
               "default": "false",
+              "inheritedFrom": {
+                "name": "LustrousLightboxBase",
+                "module": "src/components/lustrous-lightbox/lightbox-base.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "navKeyBound",
+              "type": {
+                "text": "boolean"
+              },
+              "privacy": "private",
+              "default": "false",
+              "inheritedFrom": {
+                "name": "LustrousLightboxBase",
+                "module": "src/components/lustrous-lightbox/lightbox-base.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "attachNavKeys",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LustrousLightboxBase",
+                "module": "src/components/lustrous-lightbox/lightbox-base.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "detachNavKeys",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LustrousLightboxBase",
+                "module": "src/components/lustrous-lightbox/lightbox-base.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "onNavKeydown",
+              "privacy": "private",
               "inheritedFrom": {
                 "name": "LustrousLightboxBase",
                 "module": "src/components/lustrous-lightbox/lightbox-base.ts"
@@ -20977,7 +21465,7 @@
               "kind": "field",
               "name": "initialFocus",
               "type": {
-                "text": "HTMLElement | null | undefined"
+                "text": "HTMLElement | (() => HTMLElement | null | undefined) | null | undefined"
               },
               "inheritedFrom": {
                 "name": "LustrousModal",
@@ -21101,7 +21589,7 @@
             {
               "kind": "method",
               "name": "deepActive",
-              "privacy": "private",
+              "privacy": "protected",
               "static": true,
               "return": {
                 "type": {
@@ -21342,6 +21830,19 @@
               }
             },
             {
+              "name": "rounded",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Applies a larger `l` (`14px`) corner radius to the media stage.",
+              "fieldName": "rounded",
+              "inheritedFrom": {
+                "name": "LustrousLightboxBase",
+                "module": "src/components/lustrous-lightbox/lightbox-base.ts"
+              }
+            },
+            {
               "name": "open",
               "type": {
                 "text": "boolean"
@@ -21410,6 +21911,14 @@
         }
       ],
       "exports": [
+        {
+          "kind": "js",
+          "name": "LustrousLightboxNavigation",
+          "declaration": {
+            "name": "LustrousLightboxNavigation",
+            "module": "src/components/lustrous-photo-lightbox/lustrous-photo-lightbox.ts"
+          }
+        },
         {
           "kind": "js",
           "name": "LustrousPhotoLightbox",
@@ -26033,6 +26542,17 @@
             },
             {
               "kind": "field",
+              "name": "scrimSize",
+              "type": {
+                "text": "number"
+              },
+              "default": "36",
+              "description": "Edge scrim fade length in pixels; scoped per viewport so nested scroll boxes do not inherit it.",
+              "attribute": "scrim-size",
+              "reflects": true
+            },
+            {
+              "kind": "field",
               "name": "scrollbar",
               "type": {
                 "text": "LustrousScrollbarVisibility"
@@ -26101,6 +26621,11 @@
                 "text": "HTMLElement"
               },
               "readonly": true
+            },
+            {
+              "kind": "method",
+              "name": "syncScrimSize",
+              "privacy": "private"
             },
             {
               "kind": "method",
@@ -26873,6 +27398,15 @@
               },
               "default": "\"both\"",
               "fieldName": "scrim"
+            },
+            {
+              "name": "scrim-size",
+              "type": {
+                "text": "number"
+              },
+              "default": "36",
+              "description": "Edge scrim fade length in pixels; scoped per viewport so nested scroll boxes do not inherit it.",
+              "fieldName": "scrimSize"
             },
             {
               "name": "scrollbar",
@@ -34405,7 +34939,7 @@
       "declarations": [
         {
           "kind": "class",
-          "description": "Base class for sub-elements inside `<lustrous-sidebar>`. Registers with the nearest\n`<lustrous-sidebar>` ancestor and reflects `data-sidebar-collapsed` so styles and ARIA\nstates synchronize without requiring an external context provider.",
+          "description": "Base class for sub-elements inside `<lustrous-sidebar>`. Registers with the nearest\n`<lustrous-sidebar>` ancestor and reflects `data-sidebar-collapsed` and `data-sidebar-density`\nso styles and ARIA states synchronize without requiring an external context provider.",
           "name": "LustrousSidebarPart",
           "members": [
             {
@@ -34416,6 +34950,16 @@
               },
               "default": "false",
               "attribute": "data-sidebar-collapsed",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "sidebarDensity",
+              "type": {
+                "text": "LustrousSidebarDensity"
+              },
+              "default": "\"default\"",
+              "attribute": "data-sidebar-density",
               "reflects": true
             },
             {
@@ -34435,6 +34979,14 @@
               },
               "default": "false",
               "fieldName": "sidebarCollapsed"
+            },
+            {
+              "name": "data-sidebar-density",
+              "type": {
+                "text": "LustrousSidebarDensity"
+              },
+              "default": "\"default\"",
+              "fieldName": "sidebarDensity"
             }
           ],
           "superclass": {
@@ -34461,6 +35013,28 @@
               },
               "default": "false",
               "attribute": "collapsed",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "density",
+              "type": {
+                "text": "LustrousSidebarDensity"
+              },
+              "default": "\"default\"",
+              "description": "Layout density preset: `default`, `compact-panel` (full-width dense panel), or `mobile` (pins mobile geometry at any viewport width).",
+              "attribute": "density",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "surfaceTone",
+              "type": {
+                "text": "LustrousSidebarSurfaceTone"
+              },
+              "default": "\"surface-bright\"",
+              "description": "Background surface tone when expanded (`surface-bright` default or `surface`).",
+              "attribute": "surface-tone",
               "reflects": true
             },
             {
@@ -34537,6 +35111,24 @@
               },
               "default": "false",
               "fieldName": "collapsed"
+            },
+            {
+              "name": "density",
+              "type": {
+                "text": "LustrousSidebarDensity"
+              },
+              "default": "\"default\"",
+              "description": "Layout density preset: `default`, `compact-panel` (full-width dense panel), or `mobile` (pins mobile geometry at any viewport width).",
+              "fieldName": "density"
+            },
+            {
+              "name": "surface-tone",
+              "type": {
+                "text": "LustrousSidebarSurfaceTone"
+              },
+              "default": "\"surface-bright\"",
+              "description": "Background surface tone when expanded (`surface-bright` default or `surface`).",
+              "fieldName": "surfaceTone"
             },
             {
               "name": "width",
@@ -34620,6 +35212,17 @@
             },
             {
               "kind": "field",
+              "name": "dismissVariant",
+              "type": {
+                "text": "LustrousSidebarDismissVariant"
+              },
+              "default": "\"trailing-close\"",
+              "description": "Header toggle placement when expanded: `trailing-close` (default) or `leading-back` (renders leading `arrowBack` button).",
+              "attribute": "dismiss-variant",
+              "reflects": true
+            },
+            {
+              "kind": "field",
               "name": "collapseLabel",
               "type": {
                 "text": "string"
@@ -34647,12 +35250,54 @@
             },
             {
               "kind": "field",
+              "name": "hasLogo",
+              "type": {
+                "text": "boolean"
+              },
+              "privacy": "private",
+              "default": "false"
+            },
+            {
+              "kind": "field",
+              "name": "focusToggleAfterFlip",
+              "type": {
+                "text": "boolean"
+              },
+              "privacy": "private",
+              "default": "false"
+            },
+            {
+              "kind": "method",
+              "name": "onToggleClick",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "field",
               "name": "sidebarCollapsed",
               "type": {
                 "text": "boolean"
               },
               "default": "false",
               "attribute": "data-sidebar-collapsed",
+              "reflects": true,
+              "inheritedFrom": {
+                "name": "LustrousSidebarPart",
+                "module": "src/components/lustrous-sidebar/lustrous-sidebar.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "sidebarDensity",
+              "type": {
+                "text": "LustrousSidebarDensity"
+              },
+              "default": "\"default\"",
+              "attribute": "data-sidebar-density",
               "reflects": true,
               "inheritedFrom": {
                 "name": "LustrousSidebarPart",
@@ -34689,6 +35334,15 @@
               "fieldName": "logoHref"
             },
             {
+              "name": "dismiss-variant",
+              "type": {
+                "text": "LustrousSidebarDismissVariant"
+              },
+              "default": "\"trailing-close\"",
+              "description": "Header toggle placement when expanded: `trailing-close` (default) or `leading-back` (renders leading `arrowBack` button).",
+              "fieldName": "dismissVariant"
+            },
+            {
               "name": "collapse-label",
               "type": {
                 "text": "string"
@@ -34711,6 +35365,18 @@
               },
               "default": "false",
               "fieldName": "sidebarCollapsed",
+              "inheritedFrom": {
+                "name": "LustrousSidebarPart",
+                "module": "src/components/lustrous-sidebar/lustrous-sidebar.ts"
+              }
+            },
+            {
+              "name": "data-sidebar-density",
+              "type": {
+                "text": "LustrousSidebarDensity"
+              },
+              "default": "\"default\"",
+              "fieldName": "sidebarDensity",
               "inheritedFrom": {
                 "name": "LustrousSidebarPart",
                 "module": "src/components/lustrous-sidebar/lustrous-sidebar.ts"
@@ -34760,6 +35426,20 @@
             },
             {
               "kind": "field",
+              "name": "sidebarDensity",
+              "type": {
+                "text": "LustrousSidebarDensity"
+              },
+              "default": "\"default\"",
+              "attribute": "data-sidebar-density",
+              "reflects": true,
+              "inheritedFrom": {
+                "name": "LustrousSidebarPart",
+                "module": "src/components/lustrous-sidebar/lustrous-sidebar.ts"
+              }
+            },
+            {
+              "kind": "field",
               "name": "sidebar",
               "type": {
                 "text": "LustrousSidebar | undefined"
@@ -34787,6 +35467,18 @@
               },
               "default": "false",
               "fieldName": "sidebarCollapsed",
+              "inheritedFrom": {
+                "name": "LustrousSidebarPart",
+                "module": "src/components/lustrous-sidebar/lustrous-sidebar.ts"
+              }
+            },
+            {
+              "name": "data-sidebar-density",
+              "type": {
+                "text": "LustrousSidebarDensity"
+              },
+              "default": "\"default\"",
+              "fieldName": "sidebarDensity",
               "inheritedFrom": {
                 "name": "LustrousSidebarPart",
                 "module": "src/components/lustrous-sidebar/lustrous-sidebar.ts"
@@ -34835,6 +35527,20 @@
             },
             {
               "kind": "field",
+              "name": "sidebarDensity",
+              "type": {
+                "text": "LustrousSidebarDensity"
+              },
+              "default": "\"default\"",
+              "attribute": "data-sidebar-density",
+              "reflects": true,
+              "inheritedFrom": {
+                "name": "LustrousSidebarPart",
+                "module": "src/components/lustrous-sidebar/lustrous-sidebar.ts"
+              }
+            },
+            {
+              "kind": "field",
               "name": "sidebar",
               "type": {
                 "text": "LustrousSidebar | undefined"
@@ -34860,6 +35566,18 @@
               },
               "default": "false",
               "fieldName": "sidebarCollapsed",
+              "inheritedFrom": {
+                "name": "LustrousSidebarPart",
+                "module": "src/components/lustrous-sidebar/lustrous-sidebar.ts"
+              }
+            },
+            {
+              "name": "data-sidebar-density",
+              "type": {
+                "text": "LustrousSidebarDensity"
+              },
+              "default": "\"default\"",
+              "fieldName": "sidebarDensity",
               "inheritedFrom": {
                 "name": "LustrousSidebarPart",
                 "module": "src/components/lustrous-sidebar/lustrous-sidebar.ts"
@@ -34986,6 +35704,20 @@
             },
             {
               "kind": "field",
+              "name": "sidebarDensity",
+              "type": {
+                "text": "LustrousSidebarDensity"
+              },
+              "default": "\"default\"",
+              "attribute": "data-sidebar-density",
+              "reflects": true,
+              "inheritedFrom": {
+                "name": "LustrousSidebarPart",
+                "module": "src/components/lustrous-sidebar/lustrous-sidebar.ts"
+              }
+            },
+            {
+              "kind": "field",
               "name": "sidebar",
               "type": {
                 "text": "LustrousSidebar | undefined"
@@ -35043,6 +35775,18 @@
               },
               "default": "false",
               "fieldName": "sidebarCollapsed",
+              "inheritedFrom": {
+                "name": "LustrousSidebarPart",
+                "module": "src/components/lustrous-sidebar/lustrous-sidebar.ts"
+              }
+            },
+            {
+              "name": "data-sidebar-density",
+              "type": {
+                "text": "LustrousSidebarDensity"
+              },
+              "default": "\"default\"",
+              "fieldName": "sidebarDensity",
               "inheritedFrom": {
                 "name": "LustrousSidebarPart",
                 "module": "src/components/lustrous-sidebar/lustrous-sidebar.ts"
@@ -35158,6 +35902,20 @@
             },
             {
               "kind": "field",
+              "name": "sidebarDensity",
+              "type": {
+                "text": "LustrousSidebarDensity"
+              },
+              "default": "\"default\"",
+              "attribute": "data-sidebar-density",
+              "reflects": true,
+              "inheritedFrom": {
+                "name": "LustrousSidebarPart",
+                "module": "src/components/lustrous-sidebar/lustrous-sidebar.ts"
+              }
+            },
+            {
+              "kind": "field",
               "name": "sidebar",
               "type": {
                 "text": "LustrousSidebar | undefined"
@@ -35211,6 +35969,18 @@
                 "name": "LustrousSidebarPart",
                 "module": "src/components/lustrous-sidebar/lustrous-sidebar.ts"
               }
+            },
+            {
+              "name": "data-sidebar-density",
+              "type": {
+                "text": "LustrousSidebarDensity"
+              },
+              "default": "\"default\"",
+              "fieldName": "sidebarDensity",
+              "inheritedFrom": {
+                "name": "LustrousSidebarPart",
+                "module": "src/components/lustrous-sidebar/lustrous-sidebar.ts"
+              }
             }
           ],
           "superclass": {
@@ -35247,6 +36017,20 @@
             },
             {
               "kind": "field",
+              "name": "sidebarDensity",
+              "type": {
+                "text": "LustrousSidebarDensity"
+              },
+              "default": "\"default\"",
+              "attribute": "data-sidebar-density",
+              "reflects": true,
+              "inheritedFrom": {
+                "name": "LustrousSidebarPart",
+                "module": "src/components/lustrous-sidebar/lustrous-sidebar.ts"
+              }
+            },
+            {
+              "kind": "field",
               "name": "sidebar",
               "type": {
                 "text": "LustrousSidebar | undefined"
@@ -35272,6 +36056,18 @@
               },
               "default": "false",
               "fieldName": "sidebarCollapsed",
+              "inheritedFrom": {
+                "name": "LustrousSidebarPart",
+                "module": "src/components/lustrous-sidebar/lustrous-sidebar.ts"
+              }
+            },
+            {
+              "name": "data-sidebar-density",
+              "type": {
+                "text": "LustrousSidebarDensity"
+              },
+              "default": "\"default\"",
+              "fieldName": "sidebarDensity",
               "inheritedFrom": {
                 "name": "LustrousSidebarPart",
                 "module": "src/components/lustrous-sidebar/lustrous-sidebar.ts"
@@ -35391,6 +36187,56 @@
             },
             {
               "kind": "field",
+              "name": "pillBadge",
+              "type": {
+                "text": "string"
+              },
+              "default": "\"\"",
+              "description": "Inline pill badge label rendered after the truncated label while expanded and not `pending`.",
+              "attribute": "pill-badge"
+            },
+            {
+              "kind": "field",
+              "name": "editing",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Enables inline row renaming (`<input part=\"edit-input\">`), firing cancelable `lustrous-edit-commit` / `lustrous-edit-cancel`.",
+              "attribute": "editing",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "defaultEditValue",
+              "type": {
+                "text": "string | undefined"
+              },
+              "description": "Initial draft text when entering `editing` mode (defaults to `label`).",
+              "attribute": "default-edit-value"
+            },
+            {
+              "kind": "field",
+              "name": "maxEditLength",
+              "type": {
+                "text": "number"
+              },
+              "default": "128",
+              "description": "Maximum character length for inline rename input.",
+              "attribute": "max-edit-length"
+            },
+            {
+              "kind": "field",
+              "name": "editInputLabel",
+              "type": {
+                "text": "string"
+              },
+              "default": "\"Rename item\"",
+              "description": "Accessible label for the inline rename `<input>`.",
+              "attribute": "edit-input-label"
+            },
+            {
+              "kind": "field",
               "name": "itemsOpenOnHover",
               "type": {
                 "text": "boolean"
@@ -35468,6 +36314,60 @@
             },
             {
               "kind": "field",
+              "name": "hasBadgeSlot",
+              "type": {
+                "text": "boolean"
+              },
+              "privacy": "private",
+              "default": "false"
+            },
+            {
+              "kind": "field",
+              "name": "editDraft",
+              "type": {
+                "text": "string"
+              },
+              "privacy": "private",
+              "default": "\"\""
+            },
+            {
+              "kind": "field",
+              "name": "editInitial",
+              "type": {
+                "text": "string"
+              },
+              "privacy": "private",
+              "default": "\"\""
+            },
+            {
+              "kind": "field",
+              "name": "editComposing",
+              "type": {
+                "text": "boolean"
+              },
+              "privacy": "private",
+              "default": "false"
+            },
+            {
+              "kind": "field",
+              "name": "editCommittedOrCanceled",
+              "type": {
+                "text": "boolean"
+              },
+              "privacy": "private",
+              "default": "false"
+            },
+            {
+              "kind": "field",
+              "name": "restoreFocusToRow",
+              "type": {
+                "text": "boolean"
+              },
+              "privacy": "private",
+              "default": "false"
+            },
+            {
+              "kind": "field",
               "name": "shellMobile",
               "privacy": "private",
               "readonly": true,
@@ -35491,6 +36391,22 @@
             },
             {
               "kind": "field",
+              "name": "rowEl",
+              "type": {
+                "text": "HTMLElement | undefined"
+              },
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "editInputEl",
+              "type": {
+                "text": "HTMLInputElement | undefined"
+              },
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
               "name": "nestMenu",
               "type": {
                 "text": "LustrousMenu | undefined"
@@ -35504,6 +36420,58 @@
                 "text": "LustrousMenu | undefined"
               },
               "privacy": "private"
+            },
+            {
+              "kind": "method",
+              "name": "onEditKeydown",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "e",
+                  "type": {
+                    "text": "KeyboardEvent"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "onEditBlur",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "finishEdit",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "commit",
+                  "type": {
+                    "text": "boolean"
+                  }
+                },
+                {
+                  "name": "keyboardExit",
+                  "type": {
+                    "text": "boolean"
+                  }
+                }
+              ]
             },
             {
               "kind": "method",
@@ -35627,6 +36595,20 @@
             },
             {
               "kind": "field",
+              "name": "sidebarDensity",
+              "type": {
+                "text": "LustrousSidebarDensity"
+              },
+              "default": "\"default\"",
+              "attribute": "data-sidebar-density",
+              "reflects": true,
+              "inheritedFrom": {
+                "name": "LustrousSidebarPart",
+                "module": "src/components/lustrous-sidebar/lustrous-sidebar.ts"
+              }
+            },
+            {
+              "kind": "field",
               "name": "sidebar",
               "type": {
                 "text": "LustrousSidebar | undefined"
@@ -35711,6 +36693,50 @@
               "fieldName": "badgeLabel"
             },
             {
+              "name": "pill-badge",
+              "type": {
+                "text": "string"
+              },
+              "default": "\"\"",
+              "description": "Inline pill badge label rendered after the truncated label while expanded and not `pending`.",
+              "fieldName": "pillBadge"
+            },
+            {
+              "name": "editing",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Enables inline row renaming (`<input part=\"edit-input\">`), firing cancelable `lustrous-edit-commit` / `lustrous-edit-cancel`.",
+              "fieldName": "editing"
+            },
+            {
+              "name": "default-edit-value",
+              "type": {
+                "text": "string | undefined"
+              },
+              "description": "Initial draft text when entering `editing` mode (defaults to `label`).",
+              "fieldName": "defaultEditValue"
+            },
+            {
+              "name": "max-edit-length",
+              "type": {
+                "text": "number"
+              },
+              "default": "128",
+              "description": "Maximum character length for inline rename input.",
+              "fieldName": "maxEditLength"
+            },
+            {
+              "name": "edit-input-label",
+              "type": {
+                "text": "string"
+              },
+              "default": "\"Rename item\"",
+              "description": "Accessible label for the inline rename `<input>`.",
+              "fieldName": "editInputLabel"
+            },
+            {
               "name": "items-open-on-hover",
               "type": {
                 "text": "boolean"
@@ -35755,6 +36781,18 @@
               },
               "default": "false",
               "fieldName": "sidebarCollapsed",
+              "inheritedFrom": {
+                "name": "LustrousSidebarPart",
+                "module": "src/components/lustrous-sidebar/lustrous-sidebar.ts"
+              }
+            },
+            {
+              "name": "data-sidebar-density",
+              "type": {
+                "text": "LustrousSidebarDensity"
+              },
+              "default": "\"default\"",
+              "fieldName": "sidebarDensity",
               "inheritedFrom": {
                 "name": "LustrousSidebarPart",
                 "module": "src/components/lustrous-sidebar/lustrous-sidebar.ts"
@@ -35915,7 +36953,7 @@
               "kind": "field",
               "name": "initialFocus",
               "type": {
-                "text": "HTMLElement | null | undefined"
+                "text": "HTMLElement | (() => HTMLElement | null | undefined) | null | undefined"
               },
               "inheritedFrom": {
                 "name": "LustrousModal",
@@ -36025,7 +37063,7 @@
             {
               "kind": "method",
               "name": "deepActive",
-              "privacy": "private",
+              "privacy": "protected",
               "static": true,
               "return": {
                 "type": {
@@ -36572,7 +37610,7 @@
                 "text": "number"
               },
               "default": "3",
-              "description": "Maximum visible notifications at once; older entries are dropped.",
+              "description": "Maximum visible notifications at once; older entries are dropped.\nSet `max=\"1\"` for single-toast replacement behavior where each new notification replaces the active one.",
               "attribute": "max"
             },
             {
@@ -36788,7 +37826,7 @@
                 "text": "number"
               },
               "default": "3",
-              "description": "Maximum visible notifications at once; older entries are dropped.",
+              "description": "Maximum visible notifications at once; older entries are dropped.\nSet `max=\"1\"` for single-toast replacement behavior where each new notification replaces the active one.",
               "fieldName": "max"
             },
             {
@@ -44796,6 +45834,33 @@
             },
             {
               "kind": "field",
+              "name": "rounded",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Applies a larger `l` (`14px`) corner radius to the media stage.",
+              "attribute": "rounded",
+              "reflects": true,
+              "inheritedFrom": {
+                "name": "LustrousLightboxBase",
+                "module": "src/components/lustrous-lightbox/lightbox-base.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "navigation",
+              "type": {
+                "text": "LustrousLightboxNavigation | undefined"
+              },
+              "description": "Optional previous/next gallery navigation controls and RTL-aware ArrowLeft/ArrowRight shortcuts.",
+              "inheritedFrom": {
+                "name": "LustrousLightboxBase",
+                "module": "src/components/lustrous-lightbox/lightbox-base.ts"
+              }
+            },
+            {
+              "kind": "field",
               "name": "loaded",
               "type": {
                 "text": "boolean"
@@ -44815,6 +45880,56 @@
               },
               "privacy": "protected",
               "default": "false",
+              "inheritedFrom": {
+                "name": "LustrousLightboxBase",
+                "module": "src/components/lustrous-lightbox/lightbox-base.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "navKeyBound",
+              "type": {
+                "text": "boolean"
+              },
+              "privacy": "private",
+              "default": "false",
+              "inheritedFrom": {
+                "name": "LustrousLightboxBase",
+                "module": "src/components/lustrous-lightbox/lightbox-base.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "attachNavKeys",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LustrousLightboxBase",
+                "module": "src/components/lustrous-lightbox/lightbox-base.ts"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "detachNavKeys",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "inheritedFrom": {
+                "name": "LustrousLightboxBase",
+                "module": "src/components/lustrous-lightbox/lightbox-base.ts"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "onNavKeydown",
+              "privacy": "private",
               "inheritedFrom": {
                 "name": "LustrousLightboxBase",
                 "module": "src/components/lustrous-lightbox/lightbox-base.ts"
@@ -44917,7 +46032,7 @@
               "kind": "field",
               "name": "initialFocus",
               "type": {
-                "text": "HTMLElement | null | undefined"
+                "text": "HTMLElement | (() => HTMLElement | null | undefined) | null | undefined"
               },
               "inheritedFrom": {
                 "name": "LustrousModal",
@@ -45041,7 +46156,7 @@
             {
               "kind": "method",
               "name": "deepActive",
-              "privacy": "private",
+              "privacy": "protected",
               "static": true,
               "return": {
                 "type": {
@@ -45308,6 +46423,19 @@
               }
             },
             {
+              "name": "rounded",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Applies a larger `l` (`14px`) corner radius to the media stage.",
+              "fieldName": "rounded",
+              "inheritedFrom": {
+                "name": "LustrousLightboxBase",
+                "module": "src/components/lustrous-lightbox/lightbox-base.ts"
+              }
+            },
+            {
               "name": "open",
               "type": {
                 "text": "boolean"
@@ -45376,6 +46504,14 @@
         }
       ],
       "exports": [
+        {
+          "kind": "js",
+          "name": "LustrousLightboxNavigation",
+          "declaration": {
+            "name": "LustrousLightboxNavigation",
+            "module": "src/components/lustrous-video-lightbox/lustrous-video-lightbox.ts"
+          }
+        },
         {
           "kind": "js",
           "name": "LustrousVideoLightbox",

@@ -179,7 +179,11 @@ export class LustrousSnackbar extends LustrousElement {
 
   /** Corner placement of the notification stack. @default "bottom-start" */
   @property({ reflect: true }) position: LustrousSnackbarPosition = "bottom-start";
-  /** Maximum visible notifications at once; older entries are dropped. @default 3 */
+  /**
+   * Maximum visible notifications at once; older entries are dropped.
+   * Set `max="1"` for single-toast replacement behavior where each new notification replaces the active one.
+   * @default 3
+   */
   @property({ type: Number }) max = 3;
   /** Accessible name of the notifications region (defaults to `getLustrousLabels().notifications`). */
   @property() label = "";

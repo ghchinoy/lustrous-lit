@@ -86,4 +86,25 @@ describe("lustrous-dialog", () => {
     await el.updateComplete;
     expect(closeBtn.disabled).toBe(true);
   });
+
+  it("supports mobile-drawer at <=768px, scrim-blur, and focus-heading", async () => {
+    await setViewport(1200, 800);
+    const el = await fixture<LustrousDialog>(
+      `<lustrous-dialog modal open mobile-drawer scrim-blur focus-heading heading="Mobile Settings" primary-action="Done">Body</lustrous-dialog>`,
+    );
+    await el.updateComplete;
+    const modal = el.shadowRoot!.querySelector("lustrous-modal")!;
+    expect(modal).not.toBeNull();
+    expect(modal.hasAttribute("scrim-blur")).toBe(true);
+    expect(el.headingElement).not.toBeNull();
+    expect(el.headingElement!.getAttribute("tabindex")).toBe("-1");
+    expect(el.shadowRoot!.activeElement).toBe(el.headingElement);
+
+    await setViewport(400, 800);
+    await expect.poll(() => el.shadowRoot!.querySelector("lustrous-bottom-sheet")).not.toBeNull();
+    expect(el.shadowRoot!.querySelector("lustrous-bottom-sheet")!.getAttribute("default-snap-point")).toBe("1");
+    el.open = false;
+    await el.updateComplete;
+    await setViewport(1200, 800);
+  });
 });

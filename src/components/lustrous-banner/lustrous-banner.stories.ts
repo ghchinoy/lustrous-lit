@@ -46,3 +46,24 @@ export const Variants: Story = {
     </lustrous-flex>
   `,
 };
+
+export const Clickable: Story = {
+  render: () => html`
+    <lustrous-flex direction="column" gap="l" width="640" padding="l">
+      <lustrous-banner
+        clickable
+        dismissible
+        heading="Explore Lustrous v0.2 release notes"
+        description="New mobile drawer dialogs, gallery navigation, inline sidebar rename, and 44px touch targets."
+        icon="rocketLaunch"
+      ></lustrous-banner>
+      <lustrous-banner
+        clickable
+        dismissible
+        variant="inline"
+        heading="Single-line clickable announcement banner."
+        icon="info"
+      ></lustrous-banner>
+    </lustrous-flex>
+  `,
+};

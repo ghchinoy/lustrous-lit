@@ -1,7 +1,8 @@
 import { html, nothing, type PropertyValues } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { ifDefined } from "lit/directives/if-defined.js";
-import { LustrousLightboxBase } from "../lustrous-lightbox/lightbox-base.js";
+import { LustrousLightboxBase, type LustrousLightboxNavigation } from "../lustrous-lightbox/lightbox-base.js";
+export type { LustrousLightboxNavigation };
 
 /**
  * `<lustrous-video-lightbox>` — Full-screen immersive video player lightbox built on `LustrousLightboxBase`.

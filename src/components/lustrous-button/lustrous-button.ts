@@ -17,8 +17,8 @@ export { LustrousButtonBase, lustrousButtonStyles } from "./button-base.js";
 /**
  * `<lustrous-button>` — Primary and secondary action button.
  *
- * - Variants: `accent` (default), `tonal`, `outline`, `bright`, `on-surface`, `on-surface-variant`, `translucent`
- * - Sizes: `m` (44px, default), `s` (36px), `xs` (28px)
+ * - Variants: `primary`, `accent` (default), `tonal`, `outline`, `bright`, `on-surface`, `on-surface-variant`, `translucent`
+ * - Sizes: `m` (44px, default), `s` (36px; 44px min touch target at `<= 768px`), `xs` (28px)
  * - Shapes: `rounded` (10px, default), `pill`
  * - Form-associated (`type="submit" | "reset"`) and link-capable (`href`).
  *
@@ -70,6 +70,12 @@ export class LustrousButton extends LustrousButtonBase {
       }
       .size-xs.has-icon.has-trailing {
         padding-inline: var(--lustrous-space-xs);
+      }
+      @media (max-width: 768px) {
+        .size-s {
+          min-width: var(--_lustrous-compact-s-min-target, 44px);
+          min-height: var(--_lustrous-compact-s-min-target, 44px);
+        }
       }
     `,
   ];

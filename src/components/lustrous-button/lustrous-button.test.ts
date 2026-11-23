@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fixture } from "../../test/fixture.js";
+import { css, fixture, setViewport } from "../../test/fixture.js";
 import type { LustrousButton } from "./lustrous-button.js";
 import "./lustrous-button.js";
 
@@ -20,5 +20,19 @@ describe("lustrous-button", () => {
 
     const link = await fixture<LustrousButton>(`<lustrous-button href="/docs">Docs</lustrous-button>`);
     expect(link.shadowRoot!.querySelector("a")!.getAttribute("href")).toBe("/docs");
+  });
+
+  it("supports variant=primary and expands size=s to a 44px minimum touch target at <=768px", async () => {
+    await setViewport(1200, 800);
+    const el = await fixture<LustrousButton>(
+      `<lustrous-button variant="primary" size="s">Save</lustrous-button>`,
+    );
+    const btn = el.shadowRoot!.querySelector<HTMLButtonElement>("button")!;
+    expect(btn.classList.contains("variant-primary")).toBe(true);
+    expect(css(btn, "height")).toBe("36px");
+
+    await setViewport(400, 800);
+    await expect.poll(() => parseFloat(css(btn, "height"))).toBeGreaterThanOrEqual(44);
+    await setViewport(1200, 800);
   });
 });

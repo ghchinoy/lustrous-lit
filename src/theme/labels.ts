@@ -15,6 +15,8 @@ export interface LustrousLabels {
   readonly notificationBanner: string;
   /** Default accessible label for the `lustrous-snackbar` toast viewport region. @default "Notifications" */
   readonly notifications: string;
+  /** Default accessible label for the mobile submenu drill-down back button in `lustrous-menu`. @default "Back to main menu" */
+  readonly backToMainMenu: string;
 }
 
 export const DEFAULT_LUSTROUS_LABELS: LustrousLabels = {
@@ -22,6 +24,7 @@ export const DEFAULT_LUSTROUS_LABELS: LustrousLabels = {
   dismiss: "Dismiss",
   notificationBanner: "Notification banner",
   notifications: "Notifications",
+  backToMainMenu: "Back to main menu",
 };
 
 let currentLabels: LustrousLabels = DEFAULT_LUSTROUS_LABELS;

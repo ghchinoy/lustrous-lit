@@ -188,7 +188,32 @@ export type LustrousCoreIconName =
   | "volumeUp"
   | "warning"
   | "wifiOff"
-  | "work";
+  | "work"
+  | "arrowSplit"
+  | "assignment"
+  | "autorenew"
+  | "backspace"
+  | "bookmarkSpark"
+  | "chatPasteGo"
+  | "chatSpark2"
+  | "codeBlocks"
+  | "compareArrows"
+  | "contacts"
+  | "forward10"
+  | "health"
+  | "lassoSelect"
+  | "markChatRead"
+  | "markChatUnread"
+  | "public"
+  | "recordVoiceOver"
+  | "replay10"
+  | "searchActivity"
+  | "smartphone"
+  | "sms"
+  | "stopCircle"
+  | "tts"
+  | "voiceOverOff"
+  | "wallet";
 
 /**
  * Augmentable interface for application-registered custom icons:
@@ -568,6 +593,56 @@ function renderCorePaths(name: string): SVGTemplateResult {
       return svg`<path d="M2.5 9a15 15 0 0 1 19 0M6 12.5a10 10 0 0 1 12 0M9.5 16a5 5 0 0 1 5 0" /><circle cx="12" cy="19.25" r="1" fill="currentColor" stroke="none" /><line x1="4" y1="4" x2="20" y2="20" />`;
     case "work":
       return svg`<rect x="3.5" y="7.5" width="17" height="12" rx="2" /><path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M3.5 12.5h17" />`;
+    case "arrowSplit":
+      return svg`<path d="M4 12h6l4-5h6M10 12l4 5h6m-2.5-12.5 2.5 2.5-2.5 2.5m0 5 2.5 2.5-2.5 2.5" />`;
+    case "assignment":
+      return svg`<rect x="5" y="4.5" width="14" height="16.5" rx="2" /><path d="M9.5 4.5a2.5 2.5 0 0 1 5 0M8.5 10.5h7m-7 3.5h7m-7 3.5H13" />`;
+    case "autorenew":
+      return svg`<path d="M18.5 8.5A7 7 0 0 0 6.3 7.9M6 4.5v3.8h3.8M5.5 15.5a7 7 0 0 0 12.2.6M18 19.5v-3.8h-3.8" />`;
+    case "backspace":
+      return svg`<path d="M20 6H9.2a1.8 1.8 0 0 0-1.4.7L3.5 12l4.3 5.3a1.8 1.8 0 0 0 1.4.7H20a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 20 6Zm-8 3.5 5 5m0-5-5 5" />`;
+    case "bookmarkSpark":
+      return svg`<path d="M13.5 4H7a2 2 0 0 0-2 2v14l6-3.5 6 3.5v-8.5" /><path d="M18.5 3c.3 1.7 1.1 2.5 2.8 2.8-1.7.3-2.5 1.1-2.8 2.8-.3-1.7-1.1-2.5-2.8-2.8 1.7-.3 2.5-1.1 2.8-2.8z" fill="currentColor" stroke="none" />`;
+    case "chatPasteGo":
+      return svg`<path d="M19 11V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12l3.5-3H11m3 2h6.5m-2.5-2.5 2.5 2.5-2.5 2.5" />`;
+    case "chatSpark2":
+      return svg`<path d="M13 4.5H5.5a2 2 0 0 0-2 2v13l3.5-3h10a2 2 0 0 0 2-2V11" /><path d="M18.5 3c.3 1.7 1.1 2.5 2.8 2.8-1.7.3-2.5 1.1-2.8 2.8-.3-1.7-1.1-2.5-2.8-2.8 1.7-.3 2.5-1.1 2.8-2.8z" fill="currentColor" stroke="none" />`;
+    case "codeBlocks":
+      return svg`<rect x="3.5" y="3.5" width="17" height="17" rx="2.5" /><path d="m10 9.5-2.5 2.5L10 14.5m4-5 2.5 2.5-2.5 2.5" />`;
+    case "compareArrows":
+      return svg`<path d="M16 9H4m3.5-3.5L4 9l3.5 3.5M8 15h12m-3.5-3.5L20 15l-3.5 3.5" />`;
+    case "contacts":
+      return svg`<rect x="4" y="3.5" width="16" height="17" rx="2" /><circle cx="12" cy="10" r="2.5" /><path d="M7.5 17a4.8 4.8 0 0 1 9 0" />`;
+    case "forward10":
+      return svg`<path d="M12 5a7.5 7.5 0 1 0 7.2 5.4M12 2.5 14.8 5 12 7.5m-2.5 3V15" /><rect x="12" y="10.5" width="2.8" height="4.5" rx="1.4" />`;
+    case "health":
+      return svg`<path d="M12 20.2S4 15 4 9.3A4.6 4.6 0 0 1 12 6.4a4.6 4.6 0 0 1 8 2.9c0 5.7-8 10.9-8 10.9ZM9 12h1.8l1-2 1.2 4 1-2H15" />`;
+    case "lassoSelect":
+      return svg`<ellipse cx="12" cy="10.5" rx="8" ry="5.5" stroke-dasharray="3 2.5" /><circle cx="9.5" cy="16" r="2" /><path d="M9.5 18c0 1.4-1 2.4-2.4 2.4" />`;
+    case "markChatRead":
+      return svg`<path d="M19 11V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12l3.5-3H11m3 1.5 2.2 2.2 4.3-4.4" />`;
+    case "markChatUnread":
+      return svg`<path d="M13.5 4H5a2 2 0 0 0-2 2v12l3.5-3H17a2 2 0 0 0 2-2v-2.5" /><circle cx="18" cy="6" r="2.5" />`;
+    case "public":
+      return svg`<circle cx="12" cy="12" r="8.5" /><ellipse cx="12" cy="12" rx="3.8" ry="8.5" /><path d="M3.6 12h16.8" />`;
+    case "recordVoiceOver":
+      return svg`<circle cx="9" cy="9" r="3.25" /><path d="M3.5 19a5.8 5.8 0 0 1 11 0M15.8 7.5a3.8 3.8 0 0 1 0 5m2.5-7.3a7 7 0 0 1 0 9.6" />`;
+    case "replay10":
+      return svg`<path d="M12 5a7.5 7.5 0 1 1-7.2 5.4M12 2.5 9.2 5 12 7.5m-2.5 3V15" /><rect x="12" y="10.5" width="2.8" height="4.5" rx="1.4" />`;
+    case "searchActivity":
+      return svg`<circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.2 15.2 4.8 4.8M7.5 10.5h1.4l1-2.2 1.4 4.4 1-2.2h1.2" />`;
+    case "smartphone":
+      return svg`<rect x="6.5" y="2.5" width="11" height="19" rx="2" /><path d="M10.5 18.5h3" />`;
+    case "sms":
+      return svg`<path d="M5 4.5h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-5 3v-14a2 2 0 0 1 2-2Z" /><circle cx="8.5" cy="11" r="1" fill="currentColor" stroke="none" /><circle cx="12" cy="11" r="1" fill="currentColor" stroke="none" /><circle cx="15.5" cy="11" r="1" fill="currentColor" stroke="none" />`;
+    case "stopCircle":
+      return svg`<circle cx="12" cy="12" r="8.5" /><rect x="9.25" y="9.25" width="5.5" height="5.5" rx="0.8" />`;
+    case "tts":
+      return svg`<path d="M4 7h7m-3.5 0v10m7-7.8a4.5 4.5 0 0 1 0 5.6m2.7-8a8 8 0 0 1 0 10.4" />`;
+    case "voiceOverOff":
+      return svg`<circle cx="9" cy="9" r="3.25" /><path d="M3.5 19a5.8 5.8 0 0 1 11 0M16.5 7.5a4 4 0 0 1 .7 4.2M3.5 3.5l17 17" />`;
+    case "wallet":
+      return svg`<rect x="3.5" y="5.5" width="17" height="13.5" rx="2" /><path d="M16 10h4.5v4.5H16a2.25 2.25 0 0 1 0-4.5Z" /><circle cx="16.5" cy="12.25" r="0.8" fill="currentColor" stroke="none" />`;
     default:
       return svg`<circle cx="12" cy="12" r="8" />`;
   }
@@ -597,12 +672,17 @@ export const LUSTROUS_ICON_NAMES: readonly LustrousCoreIconName[] = [
   "subdirectoryArrowRight", "subtitles", "sync", "target", "terminal", "timeline", "trendingDown",
   "trendingFlat", "trendingUp", "undo", "unlock", "unpin", "upload", "users", "verifiedUser",
   "visibility", "visibilityOff", "volumeOff", "volumeUp", "warning", "wifiOff", "work",
+  "arrowSplit", "assignment", "autorenew", "backspace", "bookmarkSpark", "chatPasteGo", "chatSpark2",
+  "codeBlocks", "compareArrows", "contacts", "forward10", "health", "lassoSelect", "markChatRead",
+  "markChatUnread", "public", "recordVoiceOver", "replay10", "searchActivity", "smartphone", "sms",
+  "stopCircle", "tts", "voiceOverOff", "wallet",
 ];
 
 /** Icons that point in the reading direction and mirror automatically in RTL. */
 export const LUSTROUS_DIRECTIONAL_ICONS: ReadonlySet<string> = new Set<string>([
   "arrowForward",
   "arrowBack",
+  "backspace",
   "chevronLeft",
   "chevronRight",
   "chevronRightAlt",

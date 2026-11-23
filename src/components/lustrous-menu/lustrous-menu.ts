@@ -4,12 +4,14 @@ import { ifDefined } from "lit/directives/if-defined.js";
 import { autoPosition, floatingResetCss, type FloatingAlign, type FloatingSide } from "../../internal/floating.js";
 import { expandInCss } from "../../internal/motion.js";
 import { setHostVar, toCss } from "../../internal/style-gen.js";
+import { getLustrousLabels } from "../../theme/labels.js";
 import { LustrousElement } from "../../theme/lustrous-element.js";
 import { LustrousMediaController } from "../../theme/media.js";
 import { LustrousShortcutScopeController } from "../../theme/shortcuts.js";
 import { lustrousBase, lustrousType } from "../../theme/theme.js";
 import { breakpoints } from "../../theme/tokens.js";
 import "../lustrous-badge/lustrous-badge.js";
+import type { LustrousBackground } from "../lustrous-box/lustrous-box.js";
 import { renderIcon, type LustrousIconName } from "../lustrous-icon/lustrous-icon.js";
 import "../lustrous-popover/lustrous-popover.js";
 import "../lustrous-tooltip/lustrous-tooltip.js";
@@ -26,6 +28,10 @@ export interface LustrousMenuItemBase {
   reserveLeadingSpace?: boolean;
   trailingIcon?: LustrousIconName;
   trailingIconVisibility?: "always" | "interaction";
+  /** Custom trailing content rendered before toggle switches/checkboxes, shortcuts, or chevrons. */
+  trailingContent?: unknown;
+  /** Optional semantic background token for highlighting a menu item row. */
+  background?: LustrousBackground;
   shortcut?: string;
   disabled?: boolean;
   tooltip?: string;
@@ -34,6 +40,8 @@ export interface LustrousMenuItemBase {
 export interface LustrousMenuActionItem extends LustrousMenuItemBase {
   type: "action";
   destructive?: boolean;
+  /** Whether activating this item closes the menu. @default true */
+  closeOnClick?: boolean;
   onClick?: (event: Event) => void;
 }
 
@@ -64,6 +72,8 @@ export interface LustrousMenuToggleItem extends LustrousMenuItemBase {
 
 export interface LustrousMenuSubmenuItem extends Omit<LustrousMenuItemBase, "shortcut"> {
   type: "submenu";
+  /** When true, mobile in-place drill-down starts directly inside this submenu. */
+  defaultOpen?: boolean;
   items: LustrousMenuItem[];
 }
 
@@ -373,6 +383,28 @@ export class LustrousMenu extends LustrousElement {
       :host(:dir(rtl)) .switch.on .switch-thumb {
         transform: translateX(-14px);
       }
+      .item[data-bg="surface"] { background-color: var(--lustrous-color-surface); }
+      .item[data-bg="surface-bright"] { background-color: var(--lustrous-color-surface-bright); }
+      .item[data-bg="surface-dim"] { background-color: var(--lustrous-color-surface-dim); }
+      .item[data-bg="surface-accent"] { background-color: var(--lustrous-color-surface-accent); }
+      .item[data-bg="surface-container-low"] { background-color: var(--lustrous-color-surface-container-low); }
+      .item[data-bg="surface-container"] { background-color: var(--lustrous-color-surface-container); }
+      .item[data-bg="surface-container-high"] { background-color: var(--lustrous-color-surface-container-high); }
+      .item[data-bg="surface-container-highest"] { background-color: var(--lustrous-color-surface-container-highest); }
+      .item[data-bg="primary-container"] { background-color: var(--lustrous-color-primary-container); color: var(--lustrous-color-on-primary-container); }
+      .item[data-bg="accent-container"] { background-color: var(--lustrous-color-accent-container); color: var(--lustrous-color-on-accent-container); }
+      .item[data-bg="tertiary-container"] { background-color: var(--lustrous-color-tertiary-container); color: var(--lustrous-color-on-tertiary-container); }
+      .item[data-bg="positive-container"] { background-color: var(--lustrous-color-positive-container); color: var(--lustrous-color-on-positive-container); }
+      .item[data-bg="warning-container"] { background-color: var(--lustrous-color-warning-container); color: var(--lustrous-color-on-warning-container); }
+      .item[data-bg="error-container"] { background-color: var(--lustrous-color-error-container); color: var(--lustrous-color-on-error-container); }
+      .item.sub-back {
+        font-weight: 560;
+      }
+      .trail-custom {
+        display: inline-flex;
+        align-items: center;
+        flex-shrink: 0;
+      }
       @media (forced-colors: active) {
         .menu {
           border: 1px solid CanvasText;
@@ -429,6 +461,8 @@ export class LustrousMenu extends LustrousElement {
   width?: number | "max-content";
 
   @property({ attribute: false }) anchor?: Element | null;
+  /** Explicit element focused when the menu closes via item selection (overrides returning focus to the trigger). */
+  @property({ attribute: false }) returnFocus?: HTMLElement | null;
   @property() label = "";
   @property({ type: Boolean, reflect: true, attribute: "open-on-hover" }) openOnHover = false;
   @property({ type: Number, attribute: "hover-open-delay" }) hoverOpenDelay = 100;
@@ -436,12 +470,14 @@ export class LustrousMenu extends LustrousElement {
 
   private static readonly HOVER_BRIDGE = 150;
   private openedByHover = false;
+  private hoverFirstClickAbsorbed = false;
   private hoverTimer?: ReturnType<typeof setTimeout>;
   private hoverDismissedAt = Number.NEGATIVE_INFINITY;
 
   @query(".menu[data-path='root']") private root!: HTMLDivElement;
   @query("lustrous-tooltip.item-tip") private itemTip?: LustrousTooltip;
   @state() private openSubs = new Set<string>();
+  @state() private mobileStack: Array<{ path: string; label: string; items: LustrousMenuItem[] }> = [];
   @state() private itemTipOpen = false;
   @state() private itemTipContent = "";
   @state() private itemTipSide: LustrousTooltipSide = "inline-end";
@@ -556,12 +592,21 @@ export class LustrousMenu extends LustrousElement {
     this.trigger.setAttribute("aria-expanded", this.open ? "true" : "false");
   }
 
-  private onTriggerClick = (): void => {
+  private onTriggerClick = (e: MouseEvent): void => {
     if ((this.trigger as HTMLElement & { disabled?: boolean })?.disabled) return;
-    this.keyboardModality = false;
+    const keyboard = e.detail === 0;
+    this.keyboardModality = keyboard;
     clearTimeout(this.hoverTimer);
     if (this.open && this.openedByHover) {
-      this.openedByHover = false;
+      if (keyboard) {
+        this.open = false;
+        return;
+      }
+      if (!this.hoverFirstClickAbsorbed) {
+        this.hoverFirstClickAbsorbed = true;
+        return;
+      }
+      this.open = false;
       return;
     }
     if (!this.open && performance.now() - this.hoverDismissedAt < 300) {
@@ -578,6 +623,7 @@ export class LustrousMenu extends LustrousElement {
     if (!this.openOnHover || this.open || (this.trigger as HTMLElement & { disabled?: boolean })?.disabled) return;
     this.hoverTimer = setTimeout(() => {
       this.openedByHover = true;
+      this.hoverFirstClickAbsorbed = false;
       this.open = true;
     }, this.hoverOpenDelay);
   };
@@ -683,9 +729,62 @@ export class LustrousMenu extends LustrousElement {
     return el.closest<HTMLElement>(".menu")!;
   }
 
-  private closeAll(focusTrigger: boolean): void {
+  private closeAll(focusTrigger: boolean, fromItemSelect = false): void {
     this.open = false;
+    if (fromItemSelect && this.returnFocus?.isConnected) {
+      this.returnFocus.focus();
+      return;
+    }
     if (focusTrigger) this.trigger?.focus();
+  }
+
+  private get isMobileDrilldown(): boolean {
+    return this.mobileViewport.matches;
+  }
+
+  private findDefaultOpenSubmenu(
+    items: LustrousMenuItem[],
+    prefix = "",
+  ): Array<{ path: string; label: string; items: LustrousMenuItem[] }> {
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]!;
+      const p = prefix ? `${prefix}/${i}` : `${i}`;
+      if (item.type === "section") {
+        const nested = this.findDefaultOpenSubmenu(item.items, `${p}.`);
+        if (nested.length) return nested;
+      } else if (item.type === "submenu") {
+        if (item.defaultOpen) return [{ path: p, label: item.label, items: item.items }];
+        const nested = this.findDefaultOpenSubmenu(item.items, p);
+        if (nested.length) return [{ path: p, label: item.label, items: item.items }, ...nested];
+      }
+    }
+    return [];
+  }
+
+  private drillInto(path: string, label: string, items: LustrousMenuItem[], focusFirst: boolean): void {
+    this.mobileStack = [...this.mobileStack, { path, label, items }];
+    if (focusFirst) {
+      void this.updateComplete.then(() => {
+        if (this.root) this.focusItem(this.root, "first");
+      });
+    }
+  }
+
+  private drillBack(focusParent: boolean): void {
+    const popped = this.mobileStack[this.mobileStack.length - 1];
+    if (!popped) return;
+    this.mobileStack = this.mobileStack.slice(0, -1);
+    if (focusParent) {
+      void this.updateComplete.then(() => {
+        const target = this.renderRoot.querySelector<HTMLElement>(`.item[data-sub="${popped.path}"]`);
+        if (target && this.root) {
+          this.setRovingTabindex(this.root, target);
+          target.focus();
+        } else if (this.root) {
+          this.focusItem(this.root, "first");
+        }
+      });
+    }
   }
 
   private onMenuKeydown(e: KeyboardEvent): void {
@@ -726,6 +825,11 @@ export class LustrousMenu extends LustrousElement {
         }
         return;
       case "Escape":
+        if (!isSub && this.mobileStack.length > 0) {
+          e.preventDefault();
+          this.drillBack(true);
+          return;
+        }
         if (!isSub && !this.shortcutScope.canHandleEscape(e)) return;
         e.preventDefault();
         if (isSub) this.closeSub(menu.dataset.path!, true);
@@ -737,10 +841,15 @@ export class LustrousMenu extends LustrousElement {
       default:
         if (e.key === openKey && item?.dataset.sub) {
           e.preventDefault();
-          this.openSub(item.dataset.sub, item, true);
-        } else if (e.key === closeKey && isSub) {
+          if (this.isMobileDrilldown) {
+            item.click();
+          } else {
+            this.openSub(item.dataset.sub, item, true);
+          }
+        } else if (e.key === closeKey && (isSub || this.mobileStack.length > 0)) {
           e.preventDefault();
-          this.closeSub(menu.dataset.path!, true);
+          if (this.mobileStack.length > 0) this.drillBack(true);
+          else this.closeSub(menu.dataset.path!, true);
         } else if (e.key.length === 1 && /\S/.test(e.key)) {
           const list = this.enabledItems(menu);
           const start = item ? list.indexOf(item) + 1 : 0;
@@ -827,11 +936,17 @@ export class LustrousMenu extends LustrousElement {
     let close = true;
     switch (item.type) {
       case "submenu":
-        if (this.openSubs.has(path)) this.closeSub(path, false);
-        else this.openSub(path, el, (e as MouseEvent).detail === 0);
+        if (this.isMobileDrilldown) {
+          this.drillInto(path, item.label, item.items, true);
+        } else if (this.openSubs.has(path)) {
+          this.closeSub(path, false);
+        } else {
+          this.openSub(path, el, (e as MouseEvent).detail === 0);
+        }
         return;
       case "action":
         item.onClick?.(e);
+        close = item.closeOnClick ?? true;
         break;
       case "link":
         item.onClick?.(e);
@@ -857,7 +972,7 @@ export class LustrousMenu extends LustrousElement {
     );
     if (close) {
       const keyboardActivated = (e as MouseEvent).detail === 0;
-      this.closeAll(keyboardActivated);
+      this.closeAll(keyboardActivated, true);
     }
   }
 
@@ -867,6 +982,7 @@ export class LustrousMenu extends LustrousElement {
     if (item.disabled) return;
     this.setRovingTabindex(this.menuOf(el), el);
     el.focus({ preventScroll: true });
+    if (this.isMobileDrilldown) return;
     const level = path.split("/").slice(0, -1).join("/");
     for (const p of [...this.openSubs]) {
       const parent = p.split("/").slice(0, -1).join("/");
@@ -897,6 +1013,11 @@ export class LustrousMenu extends LustrousElement {
         : isNudge
           ? html`<span class="lead nudge"></span>`
           : nothing;
+    const customTrail =
+      item.trailingContent !== undefined && item.trailingContent !== null && item.trailingContent !== nothing
+        ? html`<span class="trail-custom">${item.trailingContent}</span>`
+        : nothing;
+    const hasTrail = (trail && trail !== nothing) || customTrail !== nothing;
     return html`${leading}
       <span class="text"
         >${item.badge
@@ -905,7 +1026,7 @@ export class LustrousMenu extends LustrousElement {
           ? html`<span class="desc lines-${lines}">${item.description}</span>`
           : nothing}</span
       >
-      ${trail && trail !== nothing ? html`<span class="trail">${trail}</span>` : nothing}`;
+      ${hasTrail ? html`<span class="trail">${customTrail}${trail && trail !== nothing ? trail : nothing}</span>` : nothing}`;
   }
 
   private renderItem(
@@ -941,6 +1062,7 @@ export class LustrousMenu extends LustrousElement {
     ) => html`<div
       part="item"
       class="item ${cls}"
+      data-bg=${ifDefined(item.background)}
       role=${role}
       tabindex=${tabIdx}
       aria-label=${ifDefined(item.ariaLabel)}
@@ -966,6 +1088,7 @@ export class LustrousMenu extends LustrousElement {
         return html`<a
           part="item"
           class="item ${item.active && !item.disabled ? "selected" : ""}"
+          data-bg=${ifDefined(item.background)}
           role="menuitem"
           tabindex=${tabIdx}
           href=${ifDefined(item.disabled ? undefined : item.href)}
@@ -1013,6 +1136,7 @@ export class LustrousMenu extends LustrousElement {
         return html`<div
           part="item"
           class="item ${isOpen ? "sub-open" : ""}"
+          data-bg=${ifDefined(item.background)}
           role="menuitem"
           tabindex=${tabIdx}
           data-sub=${path}
@@ -1068,6 +1192,44 @@ export class LustrousMenu extends LustrousElement {
   }
 
   private renderPanels(items: LustrousMenuItem[], rootLabel: string): TemplateResult[] {
+    if (this.isMobileDrilldown && this.mobileStack.length > 0) {
+      const top = this.mobileStack[this.mobileStack.length - 1]!;
+      const roving = { assigned: false };
+      const ignoredSubs: SubmenuDescriptor[] = [];
+      const backLabel = getLustrousLabels().backToMainMenu;
+      const chunks = this.renderItems(top.items, top.path, "/", roving, ignoredSubs);
+      return [
+        html`<div
+          part="menu"
+          class="menu"
+          role="menu"
+          tabindex=${roving.assigned ? nothing : "0"}
+          data-path="root"
+          data-lustrous-shortcut-scope=""
+          popover="auto"
+          aria-label=${top.label || rootLabel || nothing}
+          @keydown=${this.onMenuKeydown}
+          @beforetoggle=${this.onPanelBeforeToggle}
+          @toggle=${this.onPanelToggle}
+          @pointerenter=${this.onPanelEnter}
+          @pointerleave=${this.onHoverLeave}
+        >
+          <div
+            part="back-button"
+            class="item sub-back"
+            role="menuitem"
+            tabindex=${roving.assigned ? "-1" : "0"}
+            aria-label=${backLabel}
+            @click=${() => this.drillBack(true)}
+          >
+            <span class="lead">${renderIcon("arrowBack", "s")}</span>
+            <span class="text"><span class="label">${top.label}</span></span>
+          </div>
+          <div class="divider" role="separator"></div>
+          ${chunks}
+        </div>`,
+      ];
+    }
     const panels: TemplateResult[] = [];
     const queue: SubmenuDescriptor[] = [{ path: "root", label: rootLabel, items }];
     while (queue.length > 0) {
@@ -1119,12 +1281,18 @@ export class LustrousMenu extends LustrousElement {
         })),
       );
       this.startScopeObserver();
+      if (this.isMobileDrilldown && this.mobileStack.length === 0) {
+        const initialStack = this.findDefaultOpenSubmenu(this.items);
+        if (initialStack.length > 0) this.mobileStack = initialStack;
+      }
       if (!this.openedByHover) {
         this.focusItem(root, this.focusLastOnOpen ? "last" : "first");
       }
       this.focusLastOnOpen = false;
     } else if (!this.open) {
       this.openedByHover = false;
+      this.hoverFirstClickAbsorbed = false;
+      if (this.mobileStack.length > 0) this.mobileStack = [];
       clearTimeout(this.hoverTimer);
       this.hideItemTooltip();
       this.stopScopeObserver();

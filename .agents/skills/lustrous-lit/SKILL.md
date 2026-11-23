@@ -3,7 +3,7 @@ name: lustrous-lit
 description: Build accessible, responsive web interfaces using the Lustrous Design System (@ghchinoy/lustrous-lit) for Lit 3 and standard HTML custom elements. Use when installing or theming Lustrous, composing layout and typography primitives, wiring form-associated controls, opening top-layer overlays, configuring app-shell navigation, binding keyboard shortcuts, rendering/registering icons, or styling with --lustrous-* CSS tokens.
 license: Apache-2.0
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Lustrous Design System (`@ghchinoy/lustrous-lit`)
@@ -35,7 +35,7 @@ import "@ghchinoy/lustrous-lit/components/lustrous-flex";
   - `resolveLustrousTheme(el?)` → `"light" | "dark"`
   - `installLustrousTheme(root?)` / `installLustrousFonts(baseUrl?)`
   - `lustrousDarkDeclarations` / `lustrousLightDeclarations` (selector-free `CSSResult`s for shadow roots)
-  - `setLustrousLabels({ close, dismiss, notificationBanner, notifications })` for global localization
+  - `setLustrousLabels({ close, dismiss, notificationBanner, notifications, backToMainMenu })` for global localization
 
 ---
 
@@ -64,7 +64,7 @@ Inherits all `<lustrous-box>` attributes plus:
 - Item (`<lustrous-grid-item>`): `col-span` (`number | "full"`), `row-span`, `col`, `row`.
 
 ### `<lustrous-scrollable-box>` (`.../components/lustrous-scrollable-box`)
-Scroll region with thin scrollbars, `36px` overflow edge-fade masks (`scrim="both | start | end | none"`), `scrollbar="hover | always | hidden"`, `label` (`role="region"`), and automatic `tabindex="0"` when overflowing.
+Scroll region with thin scrollbars, configurable overflow edge-fade masks (`scrim="both | start | end | none"`, `scrim-size="36"`), `scrollbar="hover | always | hidden"`, `label` (`role="region"`), and automatic `tabindex="0"` when overflowing.
 
 ### `<lustrous-text>` (`.../components/lustrous-text`)
 Inline by default; `block`, `heading="1"…"6"` (via `ElementInternals`), `wrap="truncate"`, and `max-lines="1 | 2 | 3"` render block-level:
@@ -81,8 +81,8 @@ Bidirectional multilingual prose typography extending `<lustrous-text>`:
 ## 3. Buttons, Links & Interactive Surfaces
 
 - **`<lustrous-button>`** (`.../components/lustrous-button`):
-  - `variant`: `"accent"` (default), `"tonal"`, `"outline"`, `"bright"`, `"on-surface"`, `"on-surface-variant"`, `"translucent"`.
-  - `size`: `"m"` (`44px`), `"s"` (`36px`), `"xs"` (`28px`); `shape`: `"rounded"` | `"pill"`.
+  - `variant`: `"primary"`, `"accent"` (default), `"tonal"`, `"outline"`, `"bright"`, `"on-surface"`, `"on-surface-variant"`, `"translucent"`.
+  - `size`: `"m"` (`44px`), `"s"` (`36px`, `44px` min touch target at `≤ 768px`), `"xs"` (`28px`); `shape`: `"rounded"` | `"pill"`.
   - `icon`, `trailing-icon`, `expanded` (renders animated chevron + `aria-expanded`), `muted`, `disabled`, `type="button | submit | reset"`, or link mode via `href`, `target`, `rel`, `download`.
 - **`<lustrous-icon-button>`** (`.../components/lustrous-icon-button`):
   - Circular icon button (`44px` / `36px` / `28px`). **Always pass `aria-label`!** Supports `icon`, `variant` (`"on-surface"` default), `size`, `badge` (unread dot), `expanded`, `href`.
@@ -145,11 +145,11 @@ All Lustrous form controls work natively with `<form>`, `new FormData(form)`, `r
 
 - **`<lustrous-tooltip>`** (`.../components/lustrous-tooltip`): Non-interactive hover/focus label (`content="..."`, `side="top | bottom | left | right | inline-start | inline-end"`, `only-when-truncated`). Wrap around a focusable trigger.
 - **`<lustrous-popover>`** (`.../components/lustrous-popover`): Interactive top-layer card (`heading`, `content`, `slot="content"`, `arrow` default `true`, `size="s | m | l"`, `open-on-hover`, `close-label` for modal focus-trap mode, `mobile-drawer` to auto-switch to `<lustrous-bottom-sheet>` at `≤ 768px`, `primary-action`, `secondary-action`).
-- **`<lustrous-menu>`** (`.../components/lustrous-menu`): Top-layer WAI-ARIA menu with nested submenus. Slotted `slot="trigger"`, `.items` (`type: "action" | "link" | "selection" | "toggle" | "submenu" | "header" | "section" | "divider"`), `@lustrous-select` (`{ item, id?, value? }`).
-- **`<lustrous-dialog>`** (`.../components/lustrous-dialog`): Structured card (`size="s | m | l"`, `heading`, `dismissible`, `primary-action`, `secondary-action`, or `slot="actions"`). Add `modal` (`slot="trigger"`, `.open`, `@lustrous-action`, `@lustrous-close-request`) to present over a top-layer scrim.
+- **`<lustrous-menu>`** (`.../components/lustrous-menu`): Top-layer WAI-ARIA menu with nested submenus and mobile (`≤ 768px`) in-place submenu drill-down. Slotted `slot="trigger"`, `.items` (`type: "action" | "link" | "selection" | "toggle" | "submenu" | "header" | "section" | "divider"`, `closeOnClick`, `background`, `trailingContent`), `.returnFocus`, `@lustrous-select` (`{ item, id?, value? }`).
+- **`<lustrous-dialog>`** (`.../components/lustrous-dialog`): Structured card (`size="s | m | l"`, `heading`, `dismissible`, `focus-heading`, `primary-action`, `secondary-action`, or `slot="actions"`). Add `modal` (`slot="trigger"`, `.open`, `mobile-drawer`, `scrim-blur`, `@lustrous-action`, `@lustrous-close-request`) to present over a top-layer scrim.
 - **`<lustrous-modal>`** (`.../components/lustrous-modal`): Low-level `<dialog>.showModal()` primitive (`open`, `label`, `scrim="default | immersive"`, `scrim-blur`, `slot="trigger"`).
-- **`<lustrous-bottom-sheet>`** (`.../components/lustrous-bottom-sheet`): Mobile-first modal sheet with `0.5` peek / `1` full snap points and swipe-to-close (`open`, `expanded`, `label`).
-- **`<lustrous-snackbar>`**, **`showSnack`**, **`dismissSnack`** (`.../components/lustrous-snackbar`):
+- **`<lustrous-bottom-sheet>`** (`.../components/lustrous-bottom-sheet`): Mobile-first modal sheet with `0.5` peek / `1` full snap points, fixed `slot="header"` / `slot="footer"`, default `<lustrous-scrollable-box>` wrapper (`scrollable`, `body-scrim`), and swipe-to-close (`open`, `expanded`, `label`).
+- **`<lustrous-snackbar>`**, **`showSnack`**, **`dismissSnack`** (`.../components/lustrous-snackbar`, defaults to `max="3"`; set `max="1"` for single-toast replacement):
   ```ts
   import { showSnack } from "@ghchinoy/lustrous-lit/components/lustrous-snackbar";
 
@@ -158,13 +158,13 @@ All Lustrous form controls work natively with `<form>`, `new FormData(form)`, `r
     action: { label: "Undo", onClick: () => rollback() },
   });
   ```
-- **`<lustrous-banner>`** (`.../components/lustrous-banner`): Named `<section>` status/promo banner (`variant="overlay | inline | info | positive | warning | error"`, `heading`, `icon`, `badge`, `dismissible`, `primary-action`, `secondary-action`).
+- **`<lustrous-banner>`** (`.../components/lustrous-banner`): Named `<section>` status/promo banner (`variant="overlay | inline | info | positive | warning | error"`, `heading`, `icon`, `badge`, `clickable` firing `lustrous-click`, `dismissible`, `primary-action`, `secondary-action`).
 
 ---
 
 ## 6. Navigation, View Switchers & Disclosure
 
-- **`<lustrous-sidebar>`** (`.../components/lustrous-sidebar`): Collapsible `272px` ↔ `56px` shell composed with `<lustrous-sidebar-header>`, `<lustrous-sidebar-nav>`, `<lustrous-sidebar-scroll-area>`, `<lustrous-sidebar-section>`, `<lustrous-sidebar-item>` (`icon`, `href`, `active`, `badge="unread | needs-input | in-progress"`, `meta`, `pending`, `.actions`, `.items`), `<lustrous-sidebar-message>`, `<lustrous-sidebar-footer>`, and `<lustrous-sidebar-drawer>` (for `≤ 959.98px`).
+- **`<lustrous-sidebar>`** (`.../components/lustrous-sidebar`): Collapsible `272px` ↔ `56px` shell (`density="default | compact-panel | mobile"`, `surface-tone="surface | surface-bright"`) composed with `<lustrous-sidebar-header>` (`dismiss-variant="trailing-close | leading-back"`), `<lustrous-sidebar-nav>`, `<lustrous-sidebar-scroll-area>`, `<lustrous-sidebar-section>`, `<lustrous-sidebar-item>` (`icon`, `href`, `active`, `badge="unread | needs-input | in-progress"`, `pill-badge`/`slot="badge"`, `editing` inline rename, `meta`, `pending`, `.actions`, `.items`), `<lustrous-sidebar-message>`, `<lustrous-sidebar-footer>`, and `<lustrous-sidebar-drawer>` (for `≤ 959.98px`).
 - **`<lustrous-side-panel>`** (`.../components/lustrous-side-panel`): Complementary `<aside>` inspector (`open`, `label`, `presentation="split | takeover"`, `side="inline-end | inline-start"`, `slot="header"`, `slot="footer"`, `@lustrous-close-request`).
 - **`<lustrous-tabs>`** (`.../components/lustrous-tabs`): `.tabs=${[{ value: "overview", label: "Overview", icon: "activity" }]}`, `value`, `variant="pill | underline"`, optional slotted `<div slot="overview">` panels, `@lustrous-change` (`{ value }`).
 - **`<lustrous-segmented-control>`** (`.../components/lustrous-segmented-control`): 2–5 equal-width segments with sliding pill indicator (`.options`, `value`, `size="s | m"`, `variant="default | transparent"`, `@lustrous-change`).
@@ -183,7 +183,7 @@ All Lustrous form controls work natively with `<form>`, `new FormData(form)`, `r
 - **`<lustrous-skeleton>`** (`.../components/lustrous-skeleton`): Shimmer placeholder (`shape="rect | circle | text"`, `width`, `height`, `border-radius`). Wrap skeleton groups in an `aria-busy="true"` container.
 - **`<lustrous-code-block>`** (`.../components/lustrous-code-block`): Dark `--lustrous-font-code` snippet container (`label`, `code` or slotted text, `wrap`, `no-copy`, `@lustrous-copy`).
 - **`<lustrous-image>`** (`.../components/lustrous-image`): Responsive `<img>` box (`src`, `alt`, `decorative`, `aspect-ratio="16/9 | 4/3 | 1/1 | ..."`, `object-fit="cover | contain | ..."`).
-- **`<lustrous-photo-lightbox>`** (`.../components/lustrous-photo-lightbox`) & **`<lustrous-video-lightbox>`** (`.../components/lustrous-video-lightbox`): Immersive full-screen media viewers (`src`, `label`, `poster`, `captions-src`, `open`, `slot="trigger"`, `slot="actions"`).
+- **`<lustrous-photo-lightbox>`** (`.../components/lustrous-photo-lightbox`) & **`<lustrous-video-lightbox>`** (`.../components/lustrous-video-lightbox`): Immersive full-screen media viewers (`src`, `label`, `poster`, `captions-src`, `rounded`, `.navigation`, `open`, `slot="trigger"`, `slot="actions"`).
 
 ---
 

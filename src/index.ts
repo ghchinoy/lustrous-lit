@@ -68,6 +68,6 @@ export * from "./components/lustrous-code-block/lustrous-code-block.js";
 export * from "./components/lustrous-kbd/lustrous-kbd.js";
 export * from "./components/lustrous-keyboard-shortcuts-modal/lustrous-keyboard-shortcuts-modal.js";
 export * from "./components/lustrous-image/lustrous-image.js";
-export { LustrousLightboxBase } from "./components/lustrous-lightbox/lightbox-base.js";
+export { LustrousLightboxBase, type LustrousLightboxNavigation } from "./components/lustrous-lightbox/lightbox-base.js";
 export * from "./components/lustrous-photo-lightbox/lustrous-photo-lightbox.js";
 export * from "./components/lustrous-video-lightbox/lustrous-video-lightbox.js";

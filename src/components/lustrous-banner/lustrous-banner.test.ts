@@ -72,4 +72,21 @@ describe("lustrous-banner", () => {
     expect(css(img, "border-top-left-radius")).toBe("0px");
     expect(css(img, "object-fit")).toBe("contain");
   });
+
+  it("supports clickable banner surface with unnested dismiss button and lustrous-click event", async () => {
+    const el = await fixture<LustrousBanner>(
+      `<lustrous-banner clickable dismissible heading="New release notes" description="See what changed in v0.2." icon="rocketLaunch"></lustrous-banner>`,
+    );
+    const surface = el.shadowRoot!.querySelector<HTMLButtonElement>("[part=surface]")!;
+    const close = el.shadowRoot!.querySelector<HTMLElement>("lustrous-icon-button.close")!;
+    expect(surface.tagName).toBe("BUTTON");
+    expect(surface.contains(close)).toBe(false);
+    expect(surface.textContent).toContain("New release notes");
+    expect(surface.textContent).toContain("See what changed in v0.2.");
+
+    const onClick = vi.fn();
+    el.addEventListener("lustrous-click", onClick);
+    surface.click();
+    expect(onClick).toHaveBeenCalledOnce();
+  });
 });
