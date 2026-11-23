@@ -118,7 +118,7 @@ export class LustrousModal extends LustrousElement {
   @property({ reflect: true }) scrim: "default" | "immersive" = "default";
   @property({ type: Boolean, reflect: true, attribute: "scrim-blur" }) scrimBlur = false;
   @property({ attribute: false }) returnFocus?: HTMLElement | null;
-  @property({ attribute: false }) initialFocus?: HTMLElement | null;
+  @property({ attribute: false }) initialFocus?: HTMLElement | (() => HTMLElement | null | undefined) | null;
 
   @query("dialog") protected dialog!: HTMLDialogElement;
   protected static managesShortcutScope = true;
@@ -150,7 +150,7 @@ export class LustrousModal extends LustrousElement {
     this.unlockScroll();
   }
 
-  private static deepActive(): HTMLElement | null {
+  protected static deepActive(): HTMLElement | null {
     let a: Element | null = document.activeElement;
     while (a?.shadowRoot?.activeElement) a = a.shadowRoot.activeElement;
     return a instanceof HTMLElement ? a : null;
@@ -250,7 +250,8 @@ export class LustrousModal extends LustrousElement {
       const slot = this.renderRoot.querySelector<HTMLSlotElement>("slot:not([name])");
       const nodes = slot?.assignedElements({ flatten: true }) ?? [];
       const auto = findFlat(nodes, (n) => n.hasAttribute("autofocus"));
-      const explicit = this.initialFocus?.isConnected ? this.initialFocus : undefined;
+      const resolvedInitial = typeof this.initialFocus === "function" ? this.initialFocus() : this.initialFocus;
+      const explicit = resolvedInitial?.isConnected ? resolvedInitial : undefined;
       const target = explicit ?? auto ?? findFlat(nodes, (n) => !n.hasAttribute("disabled") && firstFocusable([n]) === n);
       if (target) target.focus({ preventScroll: true });
       else d.focus({ preventScroll: true });

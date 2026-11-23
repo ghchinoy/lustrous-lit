@@ -9,6 +9,7 @@ import { LustrousElement } from "../../theme/lustrous-element.js";
 import { LustrousMediaController } from "../../theme/media.js";
 import { lustrousBase, lustrousFocusRing, lustrousStateLayer, lustrousType } from "../../theme/theme.js";
 import { breakpoints } from "../../theme/tokens.js";
+import "../lustrous-badge/lustrous-badge.js";
 import "../lustrous-badge-indicator/lustrous-badge-indicator.js";
 import { lustrousChevronStyles, renderChevron } from "../lustrous-chevron-icon/lustrous-chevron-icon.js";
 import "../lustrous-icon-button/lustrous-icon-button.js";
@@ -22,15 +23,20 @@ import "../lustrous-spinner/lustrous-spinner.js";
 import "../lustrous-tooltip/lustrous-tooltip.js";
 import type { LustrousTooltip } from "../lustrous-tooltip/lustrous-tooltip.js";
 
-const EASE = unsafeCSS("250ms cubic-bezier(0.2, 0, 0, 1)");
+const EASE = unsafeCSS("var(--lustrous-duration-medium300) var(--lustrous-easing-standard)");
+
+export type LustrousSidebarDensity = "default" | "compact-panel" | "mobile";
+export type LustrousSidebarSurfaceTone = "surface" | "surface-bright";
+export type LustrousSidebarDismissVariant = "trailing-close" | "leading-back";
 
 /**
  * Base class for sub-elements inside `<lustrous-sidebar>`. Registers with the nearest
- * `<lustrous-sidebar>` ancestor and reflects `data-sidebar-collapsed` so styles and ARIA
- * states synchronize without requiring an external context provider.
+ * `<lustrous-sidebar>` ancestor and reflects `data-sidebar-collapsed` and `data-sidebar-density`
+ * so styles and ARIA states synchronize without requiring an external context provider.
  */
 export class LustrousSidebarPart extends LustrousElement {
   @property({ type: Boolean, reflect: true, attribute: "data-sidebar-collapsed" }) sidebarCollapsed = false;
+  @property({ reflect: true, attribute: "data-sidebar-density" }) sidebarDensity: LustrousSidebarDensity = "default";
 
   protected sidebar?: LustrousSidebar;
 
@@ -86,6 +92,16 @@ export class LustrousSidebar extends LustrousElement {
         width: var(--_lustrous-sidebar-collapsed-width, 56px);
         background-color: var(--lustrous-color-surface);
       }
+      :host([surface-tone="surface"]) {
+        background-color: var(--lustrous-color-surface);
+      }
+      :host([density="compact-panel"]) {
+        width: var(--_lustrous-sidebar-width, 100%);
+        --_lustrous-compact-s-min-target: 0px;
+      }
+      :host([density="compact-panel"][collapsed]) {
+        width: var(--_lustrous-sidebar-collapsed-width, 56px);
+      }
       @media (prefers-reduced-motion: reduce) {
         :host {
           transition: none;
@@ -106,6 +122,10 @@ export class LustrousSidebar extends LustrousElement {
   ];
 
   @property({ type: Boolean, reflect: true }) collapsed = false;
+  /** Layout density preset: `default`, `compact-panel` (full-width dense panel), or `mobile` (pins mobile geometry at any viewport width). @default "default" */
+  @property({ reflect: true }) density: LustrousSidebarDensity = "default";
+  /** Background surface tone when expanded (`surface-bright` default or `surface`). @default "surface-bright" */
+  @property({ reflect: true, attribute: "surface-tone" }) surfaceTone: LustrousSidebarSurfaceTone = "surface-bright";
   @property() width?: string | number;
   @property({ attribute: "collapsed-width" }) collapsedWidth?: string | number;
   @property() label = "Sidebar navigation";
@@ -118,6 +138,7 @@ export class LustrousSidebar extends LustrousElement {
   registerPart(part: LustrousSidebarPart): void {
     this.parts.add(part);
     part.sidebarCollapsed = this.collapsed;
+    part.sidebarDensity = this.density;
   }
 
   /** @internal */
@@ -147,6 +168,9 @@ export class LustrousSidebar extends LustrousElement {
     }
     if (changed.has("collapsed")) {
       for (const p of this.parts) p.sidebarCollapsed = this.collapsed;
+    }
+    if (changed.has("density")) {
+      for (const p of this.parts) p.sidebarDensity = this.density;
     }
     if (this.internals && (changed.has("label") || !this.internals.role)) {
       this.internals.role = "complementary";
@@ -242,6 +266,22 @@ export class LustrousSidebarHeader extends LustrousSidebarPart {
         opacity: 1;
         pointer-events: auto;
       }
+      :host([data-sidebar-density="compact-panel"]) {
+        height: 52px;
+      }
+      .leading-back {
+        margin-inline-start: 10px;
+        flex-shrink: 0;
+      }
+      :host([dismiss-variant="leading-back"]:not([data-sidebar-collapsed])) .brand {
+        margin-inline-start: 4px;
+      }
+      :host([dismiss-variant="leading-back"]:not([data-sidebar-collapsed])) .actions {
+        inset-inline-end: 10px;
+      }
+      .logo[hidden] {
+        display: none;
+      }
       .actions {
         position: absolute;
         z-index: 1;
@@ -252,9 +292,40 @@ export class LustrousSidebarHeader extends LustrousSidebarPart {
         gap: var(--lustrous-space-xs);
         height: 36px;
         min-width: 36px;
+        transition:
+          opacity 150ms ease,
+          visibility 0s linear 0s;
+      }
+      :host([data-sidebar-collapsed]) .actions {
+        opacity: 0;
+        pointer-events: none;
+        visibility: hidden;
+        transition:
+          opacity 150ms ease,
+          visibility 0s linear 150ms;
       }
       .actions[hidden] {
         display: none;
+      }
+      :host([data-sidebar-density="mobile"]) {
+        height: 48px;
+        margin-top: var(--lustrous-space-s);
+      }
+      :host([data-sidebar-density="mobile"]:not([data-sidebar-collapsed])) .brand {
+        gap: var(--lustrous-space-m);
+        margin-inline-start: 16px;
+        padding-inline-start: 6px;
+      }
+      :host([data-sidebar-density="mobile"]) .label {
+        ${lustrousType("headline-small")}
+      }
+      :host([data-sidebar-density="mobile"]) .actions {
+        inset-inline-end: 60px;
+        height: 44px;
+        min-width: 44px;
+      }
+      :host([data-sidebar-density="mobile"]:not([data-sidebar-collapsed])) .toggle {
+        inset-inline-end: 8px;
       }
       @media ${unsafeCSS(breakpoints.shellMobile)} {
         :host {
@@ -291,26 +362,68 @@ export class LustrousSidebarHeader extends LustrousSidebarPart {
 
   @property() label = "";
   @property({ reflect: true, attribute: "logo-href" }) logoHref?: string;
+  /** Header toggle placement when expanded: `trailing-close` (default) or `leading-back` (renders leading `arrowBack` button). @default "trailing-close" */
+  @property({ reflect: true, attribute: "dismiss-variant" }) dismissVariant: LustrousSidebarDismissVariant = "trailing-close";
   @property({ attribute: "collapse-label" }) collapseLabel = "Close sidebar";
   @property({ attribute: "expand-label" }) expandLabel = "Open sidebar";
   @state() private hasActions = false;
+  @state() private hasLogo = false;
+  private focusToggleAfterFlip = false;
 
   override connectedCallback(): void {
     super.connectedCallback();
     this.hasActions = !!this.querySelector(":scope > [slot=actions]");
+    this.hasLogo = !!this.querySelector(":scope > [slot=logo]");
+  }
+
+  private onToggleClick(): void {
+    this.focusToggleAfterFlip = true;
+    this.sidebar?.toggle();
+  }
+
+  protected override updated(changed: PropertyValues): void {
+    super.updated(changed);
+    if (changed.has("sidebarCollapsed") && this.focusToggleAfterFlip) {
+      this.focusToggleAfterFlip = false;
+      const btn =
+        this.renderRoot.querySelector<HTMLElement>(".leading-back") ??
+        this.renderRoot.querySelector<HTMLElement>(".toggle lustrous-icon-button");
+      btn?.focus();
+    }
   }
 
   protected override render() {
     const toggleText = this.sidebarCollapsed ? this.expandLabel : this.collapseLabel;
-    const mobileClose = this.shellMobile.matches && !this.sidebarCollapsed;
+    const isMobile = this.shellMobile.matches || this.sidebarDensity === "mobile";
+    const mobileClose = isMobile && !this.sidebarCollapsed;
+    const leadingBack = this.dismissVariant === "leading-back" && !this.sidebarCollapsed;
     const isLogoLink = !this.sidebarCollapsed && Boolean(this.logoHref);
-    const brandInner = html`<span class="logo"><slot name="logo"></slot></span>
+    const hideEmptyLogo = leadingBack && !this.hasLogo;
+    const brandInner = html`<span class="logo" ?hidden=${hideEmptyLogo}
+        ><slot
+          name="logo"
+          @slotchange=${(e: Event) => {
+            this.hasLogo = (e.target as HTMLSlotElement).assignedElements().length > 0;
+          }}
+        ></slot
+      ></span>
       <span class="label" aria-hidden=${this.sidebarCollapsed ? "true" : nothing}>${this.label}</span>`;
 
-    return html`${isLogoLink
+    return html`${leadingBack
+        ? html`<lustrous-icon-button
+            part="dismiss-button"
+            class="leading-back"
+            size="s"
+            muted
+            icon="arrowBack"
+            aria-label=${this.collapseLabel}
+            aria-expanded="true"
+            @click=${() => this.onToggleClick()}
+          ></lustrous-icon-button>`
+        : nothing}${isLogoLink
         ? html`<a part="brand" class="brand focus-ring" href=${ifDefined(this.logoHref)}>${brandInner}</a>`
         : html`<span part="brand" class="brand">${brandInner}</span>`}
-      <span part="actions" class="actions" ?hidden=${!this.hasActions || this.sidebarCollapsed}
+      <span part="actions" class="actions" ?hidden=${!this.hasActions} ?inert=${this.sidebarCollapsed}
         ><slot
           name="actions"
           @slotchange=${(e: Event) => {
@@ -318,16 +431,18 @@ export class LustrousSidebarHeader extends LustrousSidebarPart {
           }}
         ></slot
       ></span>
-      <lustrous-tooltip class="toggle" content=${toggleText} side=${this.sidebarCollapsed ? "right" : "bottom"}>
-        <lustrous-icon-button
-          size=${mobileClose ? "m" : "s"}
-          muted
-          icon=${mobileClose ? "close" : "sideNav"}
-          aria-label=${toggleText}
-          aria-expanded=${this.sidebarCollapsed ? "false" : "true"}
-          @click=${() => this.sidebar?.toggle()}
-        ></lustrous-icon-button>
-      </lustrous-tooltip>`;
+      ${!leadingBack
+        ? html`<lustrous-tooltip class="toggle" content=${toggleText} side=${this.sidebarCollapsed ? "right" : "bottom"}>
+            <lustrous-icon-button
+              size=${mobileClose ? "m" : "s"}
+              muted
+              icon=${mobileClose ? "close" : "sideNav"}
+              aria-label=${toggleText}
+              aria-expanded=${this.sidebarCollapsed ? "false" : "true"}
+              @click=${() => this.onToggleClick()}
+            ></lustrous-icon-button>
+          </lustrous-tooltip>`
+        : nothing}`;
   }
 }
 
@@ -404,7 +519,7 @@ export class LustrousSidebarScrollArea extends LustrousSidebarPart {
   }
 
   protected override render() {
-    return html`<lustrous-scrollable-box overflow-y=${this.sidebarCollapsed ? "hidden" : "auto"}
+    return html`<lustrous-scrollable-box overflow-y=${this.sidebarCollapsed ? "hidden" : "auto"} scrim-size="16"
       ><div class="content"><slot></slot></div
     ></lustrous-scrollable-box>`;
   }
@@ -431,12 +546,17 @@ export class LustrousSidebarSection extends LustrousSidebarPart {
         display: block;
         flex-shrink: 0;
         margin-top: var(--lustrous-space-m);
-        transition: opacity 150ms ease;
+        transition:
+          opacity 150ms ease,
+          visibility 0s linear 0s;
       }
       :host([data-sidebar-collapsed]) {
         opacity: 0;
         pointer-events: none;
         visibility: hidden;
+        transition:
+          opacity 150ms ease,
+          visibility 0s linear 150ms;
       }
       section {
         display: flex;
@@ -679,13 +799,18 @@ export class LustrousSidebarMessage extends LustrousSidebarPart {
         margin-inline: 10px;
         padding: var(--lustrous-space-s);
         white-space: normal;
-        transition: opacity 150ms ease;
+        transition:
+          opacity 150ms ease,
+          visibility 0s linear 0s;
         ${lustrousType("body-small")}
       }
       :host([data-sidebar-collapsed]) {
         opacity: 0;
         pointer-events: none;
         visibility: hidden;
+        transition:
+          opacity 150ms ease,
+          visibility 0s linear 150ms;
       }
       .icon {
         display: inline-flex;
@@ -845,6 +970,8 @@ export class LustrousSidebarItem extends LustrousSidebarPart {
       }
       lustrous-tooltip {
         display: block;
+        width: 100%;
+        min-width: 0;
       }
       .shell {
         position: relative;
@@ -852,6 +979,9 @@ export class LustrousSidebarItem extends LustrousSidebarPart {
         display: flex;
         align-items: center;
         margin-inline: 10px;
+      }
+      .shell:hover .row:not(:disabled):not([aria-disabled="true"])::after {
+        opacity: 1;
       }
       lustrous-menu.nest {
         display: block;
@@ -876,6 +1006,30 @@ export class LustrousSidebarItem extends LustrousSidebarPart {
           padding-inline ${EASE},
           background-color 150ms ease;
       }
+      :host([data-sidebar-density="compact-panel"]) .row {
+        height: 40px;
+        padding-inline: 12px;
+        border-radius: var(--lustrous-radius-s);
+      }
+      :host([data-sidebar-density="compact-panel"]) .label {
+        ${lustrousType("body-large")}
+      }
+      :host([data-sidebar-density="compact-panel"]) .row.active .label {
+        ${lustrousType("body-large-emphasized")}
+      }
+      :host([data-sidebar-density="mobile"]) .row {
+        height: 44px;
+        gap: var(--lustrous-space-m);
+      }
+      :host([data-sidebar-density="mobile"]:not([data-sidebar-collapsed])) .row {
+        padding-inline-start: 16px;
+      }
+      :host([data-sidebar-density="mobile"]) .label {
+        ${lustrousType("body-large")}
+      }
+      :host([data-sidebar-density="mobile"]) .row.active .label {
+        ${lustrousType("body-large-emphasized")}
+      }
       .row.focus-ring:focus-visible {
         outline-offset: -3px;
       }
@@ -885,7 +1039,8 @@ export class LustrousSidebarItem extends LustrousSidebarPart {
       :host([data-sidebar-collapsed]) .row {
         padding-inline: 8px;
       }
-      .row.active {
+      .row.active,
+      .row.nest-open {
         background-color: var(--lustrous-color-surface-dim);
       }
       :host([disabled]) .row {
@@ -896,12 +1051,45 @@ export class LustrousSidebarItem extends LustrousSidebarPart {
         opacity: 0;
       }
       .icon {
+        position: relative;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
         width: 20px;
         height: 20px;
+      }
+      .collapsed-unread {
+        position: absolute;
+        top: -4px;
+        inset-inline-end: -4px;
+      }
+      .pill-badge {
+        display: inline-flex;
+        align-items: center;
+        flex-shrink: 0;
+        transition: opacity 150ms ease;
+      }
+      .pill-badge[hidden] {
+        display: none;
+      }
+      .edit-input {
+        box-sizing: border-box;
+        width: 100%;
+        height: 36px;
+        padding-inline: 12px;
+        border: 1.5px solid var(--lustrous-color-primary);
+        border-radius: var(--lustrous-radius-full);
+        background-color: var(--lustrous-color-surface);
+        color: var(--lustrous-color-on-surface);
+        font: inherit;
+        outline: none;
+        ${lustrousType("body-small")}
+      }
+      :host([data-sidebar-density="compact-panel"]) .edit-input {
+        height: 40px;
+        border-radius: var(--lustrous-radius-s);
+        ${lustrousType("body-large")}
       }
       .label,
       .meta {
@@ -946,6 +1134,7 @@ export class LustrousSidebarItem extends LustrousSidebarPart {
         }
       }
       :host([data-sidebar-collapsed]) .label,
+      :host([data-sidebar-collapsed]) .pill-badge,
       :host([data-sidebar-collapsed]) .meta,
       :host([data-sidebar-collapsed]) .trailing {
         opacity: 0;
@@ -953,6 +1142,9 @@ export class LustrousSidebarItem extends LustrousSidebarPart {
       }
       :host([data-sidebar-collapsed]) .trailing {
         visibility: hidden;
+        transition:
+          opacity 150ms ease,
+          visibility 0s linear 150ms;
       }
       .trailing {
         position: absolute;
@@ -962,7 +1154,9 @@ export class LustrousSidebarItem extends LustrousSidebarPart {
         display: flex;
         align-items: center;
         gap: var(--lustrous-space-xs);
-        transition: opacity 150ms ease;
+        transition:
+          opacity 150ms ease,
+          visibility 0s linear 0s;
       }
       .slot {
         position: relative;
@@ -1092,6 +1286,16 @@ export class LustrousSidebarItem extends LustrousSidebarPart {
   badge: boolean | LustrousSidebarBadge = false;
 
   @property({ attribute: "badge-label" }) badgeLabel = "";
+  /** Inline pill badge label rendered after the truncated label while expanded and not `pending`. */
+  @property({ attribute: "pill-badge" }) pillBadge = "";
+  /** Enables inline row renaming (`<input part="edit-input">`), firing cancelable `lustrous-edit-commit` / `lustrous-edit-cancel`. */
+  @property({ type: Boolean, reflect: true }) editing = false;
+  /** Initial draft text when entering `editing` mode (defaults to `label`). */
+  @property({ attribute: "default-edit-value" }) defaultEditValue?: string;
+  /** Maximum character length for inline rename input. @default 128 */
+  @property({ type: Number, attribute: "max-edit-length" }) maxEditLength = 128;
+  /** Accessible label for the inline rename `<input>`. @default "Rename item" */
+  @property({ attribute: "edit-input-label" }) editInputLabel = "Rename item";
   @property({ type: Boolean, attribute: "items-open-on-hover" }) itemsOpenOnHover = false;
   @property() meta = "";
   @property({ reflect: true }) href?: string;
@@ -1102,11 +1306,78 @@ export class LustrousSidebarItem extends LustrousSidebarPart {
 
   @state() private nestOpen = false;
   @state() private actionsOpen = false;
+  @state() private hasBadgeSlot = false;
+  @state() private editDraft = "";
+  private editInitial = "";
+  private editComposing = false;
+  private editCommittedOrCanceled = false;
+  private restoreFocusToRow = false;
   private readonly shellMobile = new LustrousMediaController(this, "shellMobile");
   @query("lustrous-tooltip.row-tip") private rowTip?: LustrousTooltip;
   @query(".label") private labelEl?: HTMLElement;
+  @query("[part=row]") private rowEl?: HTMLElement;
+  @query("[part=edit-input]") private editInputEl?: HTMLInputElement;
   @query("lustrous-menu.nest") private nestMenu?: LustrousMenu;
   @query("lustrous-menu.actions") private actionsMenu?: LustrousMenu;
+
+  override connectedCallback(): void {
+    super.connectedCallback();
+    if (this.children) {
+      this.hasBadgeSlot = [...this.children].some((c) => c.getAttribute("slot") === "badge");
+    }
+  }
+
+  private onEditKeydown(e: KeyboardEvent): void {
+    if (this.editComposing || e.isComposing) return;
+    if (e.key === "Enter") {
+      e.preventDefault();
+      e.stopPropagation();
+      this.finishEdit(true, true);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      this.finishEdit(false, true);
+    }
+  }
+
+  private onEditBlur(): void {
+    if (this.editCommittedOrCanceled || !this.editing) return;
+    if (typeof document !== "undefined" && !document.hasFocus()) return;
+    this.finishEdit(true, false);
+  }
+
+  private finishEdit(commit: boolean, keyboardExit: boolean): void {
+    if (this.editCommittedOrCanceled || !this.editing) return;
+    const trimmed = this.editDraft.trim();
+    const shouldCommit = commit && trimmed.length > 0 && trimmed !== this.editInitial.trim();
+    this.editCommittedOrCanceled = true;
+    if (shouldCommit) {
+      const ev = new CustomEvent("lustrous-edit-commit", {
+        detail: { value: trimmed },
+        bubbles: true,
+        composed: true,
+        cancelable: true,
+      });
+      if (this.dispatchEvent(ev)) {
+        this.restoreFocusToRow = keyboardExit;
+        this.editing = false;
+      } else {
+        this.editCommittedOrCanceled = false;
+      }
+    } else {
+      const ev = new CustomEvent("lustrous-edit-cancel", {
+        bubbles: true,
+        composed: true,
+        cancelable: true,
+      });
+      if (this.dispatchEvent(ev)) {
+        this.restoreFocusToRow = keyboardExit;
+        this.editing = false;
+      } else {
+        this.editCommittedOrCanceled = false;
+      }
+    }
+  }
 
   private onNestToggle(e: CustomEvent<{ open: boolean }>): void {
     if (e.target !== e.currentTarget) return;
@@ -1149,6 +1420,12 @@ export class LustrousSidebarItem extends LustrousSidebarPart {
 
   protected override willUpdate(changed: PropertyValues): void {
     super.willUpdate(changed);
+    if (changed.has("editing") && this.editing) {
+      this.editInitial = this.defaultEditValue ?? this.label;
+      this.editDraft = this.editInitial;
+      this.editComposing = false;
+      this.editCommittedOrCanceled = false;
+    }
     const r = this.trailingReserve();
     setHostVar(this, "--_lustrous-reserve", r ? `${r}px` : undefined);
   }
@@ -1157,6 +1434,18 @@ export class LustrousSidebarItem extends LustrousSidebarPart {
     super.updated(changed);
     if (this.rowTip) {
       this.rowTip.truncationTarget = this.sidebarCollapsed ? null : (this.labelEl ?? null);
+    }
+    if (changed.has("editing") && this.editing && this.editInputEl) {
+      this.editInputEl.focus();
+      this.editInputEl.select();
+    } else if (changed.has("editing") && !this.editing && this.restoreFocusToRow) {
+      this.restoreFocusToRow = false;
+      const tip = this.rowTip;
+      if (tip) {
+        void tip.updateComplete.then(() => this.rowEl?.focus());
+      } else {
+        this.rowEl?.focus();
+      }
     }
   }
 
@@ -1202,17 +1491,59 @@ export class LustrousSidebarItem extends LustrousSidebarPart {
       ? html`<bdi dir=${labelDir}>${renderIsolatedTechnicalTokens(this.label, labelDir)}</bdi>`
       : this.label;
 
+    const showPillBadge = !this.sidebarCollapsed && !this.pending && (Boolean(this.pillBadge) || this.hasBadgeSlot);
+    const collapsedUnread = this.sidebarCollapsed && badge === "unread";
+
     const content = html`
-      ${this.icon ? html`<span class="icon">${renderIcon(this.icon, "s")}</span>` : nothing}
+      ${this.icon
+        ? html`<span class="icon"
+            >${renderIcon(this.icon, "s")}${collapsedUnread
+              ? html`<lustrous-badge-indicator class="collapsed-unread"></lustrous-badge-indicator>`
+              : nothing}</span
+          >`
+        : nothing}
       <span class="label"
         >${this.pending ? html`<span part="glimmer" class="glimmer" aria-hidden="true"></span>` : renderedLabel}</span
+      >
+      <span class="pill-badge" ?hidden=${!showPillBadge}
+        ><slot
+          name="badge"
+          @slotchange=${(e: Event) => {
+            this.hasBadgeSlot = (e.target as HTMLSlotElement).assignedNodes().length > 0;
+          }}
+          >${this.pillBadge ? html`<lustrous-badge>${this.pillBadge}</lustrous-badge>` : nothing}</slot
+        ></span
       >
       ${this.meta ? html`<span class="meta" aria-hidden="true">${this.meta}</span>` : nothing}
     `;
 
-    const cls = `row state-layer focus-ring ${this.active ? "active" : ""} ${reserve ? "reserve" : ""}`;
+    const cls = `row state-layer focus-ring ${this.active ? "active" : ""} ${this.nestOpen ? "nest-open" : ""} ${reserve ? "reserve" : ""}`;
     const current = this.active ? "page" : nothing;
     const slot = hasNest ? "trigger" : nothing;
+
+    if (this.editing && !this.sidebarCollapsed) {
+      return html`<div class="shell">
+        <input
+          part="edit-input"
+          class="edit-input focus-ring"
+          type="text"
+          maxlength=${this.maxEditLength}
+          aria-label=${this.editInputLabel}
+          .value=${this.editDraft}
+          @input=${(e: Event) => {
+            this.editDraft = (e.target as HTMLInputElement).value;
+          }}
+          @compositionstart=${() => {
+            this.editComposing = true;
+          }}
+          @compositionend=${() => {
+            this.editComposing = false;
+          }}
+          @keydown=${this.onEditKeydown}
+          @blur=${this.onEditBlur}
+        />
+      </div>`;
+    }
 
     const primary =
       this.href !== undefined && !hasNest
@@ -1243,7 +1574,7 @@ export class LustrousSidebarItem extends LustrousSidebarPart {
             ${content}
           </button>`;
 
-    return html`<lustrous-tooltip
+    const wrappedPrimary = html`<lustrous-tooltip
       class="row-tip"
       content=${this.label}
       side="right"
@@ -1251,10 +1582,20 @@ export class LustrousSidebarItem extends LustrousSidebarPart {
       ?disabled=${tipDisabled}
       ?only-when-truncated=${!this.sidebarCollapsed}
       .truncationTarget=${this.sidebarCollapsed ? null : (this.labelEl ?? null)}
-    >
-      <div class="shell ${hasActions ? "has-actions" : ""} ${this.actionsOpen ? "actions-open" : ""}">
-        ${hasNest
-          ? html`<lustrous-menu
+      >${primary}</lustrous-tooltip
+    >`;
+
+    return html`<div class="shell ${hasActions ? "has-actions" : ""} ${this.actionsOpen ? "actions-open" : ""}">
+      ${hasNest
+        ? html`<lustrous-tooltip
+            class="row-tip"
+            content=${this.label}
+            side="right"
+            delay="0"
+            ?disabled=${tipDisabled}
+            ?only-when-truncated=${!this.sidebarCollapsed}
+            .truncationTarget=${this.sidebarCollapsed ? null : (this.labelEl ?? null)}
+            ><lustrous-menu
               class="nest"
               side="inline-end"
               align="start"
@@ -1265,37 +1606,37 @@ export class LustrousSidebarItem extends LustrousSidebarPart {
               hover-close-delay=${NESTED_HOVER_CLOSE_DELAY}
               @lustrous-toggle=${this.onNestToggle}
               >${primary}</lustrous-menu
-            >`
-          : primary}
-        ${hasTrailing
-          ? html`<span class="trailing" ?inert=${this.sidebarCollapsed}>
-              ${leftBadge ? this.renderBadge(badge, "") : nothing}
-              <span class="slot">
-                ${rightBadge ? this.renderBadge(badge, "swap") : nothing}
-                ${this.pinned ? html`<span class="pin swap" aria-hidden="true">${renderIcon("pin", "xs")}</span>` : nothing}
-                ${hasActions
-                  ? html`<lustrous-menu
-                      class="actions"
-                      side="bottom"
-                      align="start"
-                      .items=${this.actions ?? []}
-                      @lustrous-toggle=${this.onActionsToggle}
-                    >
-                      <lustrous-icon-button
-                        slot="trigger"
-                        class="overflow"
-                        size=${mobile ? "s" : "xs"}
-                        icon=${mobile && this.pinned && !this.actionsOpen ? "pin" : "moreVert"}
-                        aria-label=${this.actionsLabel.replace("{label}", this.label)}
-                      ></lustrous-icon-button>
-                    </lustrous-menu>`
-                  : nothing}
-              </span>
-            </span>`
-          : nothing}
-        ${describedBy !== nothing ? html`<span id="badge-desc" hidden>${descriptionText}</span>` : nothing}
-      </div>
-    </lustrous-tooltip>`;
+            ></lustrous-tooltip
+          >`
+        : wrappedPrimary}
+      ${hasTrailing
+        ? html`<span class="trailing" ?inert=${this.sidebarCollapsed}>
+            ${leftBadge ? this.renderBadge(badge, "") : nothing}
+            <span class="slot">
+              ${rightBadge ? this.renderBadge(badge, "swap") : nothing}
+              ${this.pinned ? html`<span class="pin swap" aria-hidden="true">${renderIcon("pin", "xs")}</span>` : nothing}
+              ${hasActions
+                ? html`<lustrous-menu
+                    class="actions"
+                    side="bottom"
+                    align="start"
+                    .items=${this.actions ?? []}
+                    @lustrous-toggle=${this.onActionsToggle}
+                  >
+                    <lustrous-icon-button
+                      slot="trigger"
+                      class="overflow"
+                      size=${mobile ? "s" : "xs"}
+                      icon=${mobile && this.pinned && !this.actionsOpen ? "pin" : "moreVert"}
+                      aria-label=${this.actionsLabel.replace("{label}", this.label)}
+                    ></lustrous-icon-button>
+                  </lustrous-menu>`
+                : nothing}
+            </span>
+          </span>`
+        : nothing}
+      ${describedBy !== nothing ? html`<span id="badge-desc" hidden>${descriptionText}</span>` : nothing}
+    </div>`;
   }
 }
 

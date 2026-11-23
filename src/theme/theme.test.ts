@@ -84,6 +84,7 @@ describe("Lustrous theme & tokens", () => {
       ["on-surface-variant", "surface"],
       ["on-surface-variant", "surface-container"],
       ["on-surface-variant", "surface-container-high"],
+      ["on-surface-variant", "surface-container-highest"],
       ["primary", "surface"],
       ["on-primary", "primary"],
       ["on-primary-container", "primary-container"],
@@ -118,6 +119,13 @@ describe("Lustrous theme & tokens", () => {
     // WCAG 1.4.11 non-text 3:1 contrast for control outlines
     expect(contrastRatio(lightColors.outline, lightColors.surface)).toBeGreaterThanOrEqual(3);
     expect(contrastRatio(darkColors.outline!, darkColors.surface!)).toBeGreaterThanOrEqual(3);
+
+    // Adjacent neutral surface tiers & hairline borders stay distinct in both themes
+    expect(lightColors["surface-container-low"]).not.toBe(lightColors.background);
+    expect(lightColors["surface-container-low"]).not.toBe(lightColors.surface);
+    expect(lightColors["surface-container-highest"]).not.toBe(lightColors["outline-variant"]);
+    expect(darkColors["surface-container-low"]).not.toBe(darkColors.background);
+    expect(darkColors["surface-container-highest"]).not.toBe(darkColors["outline-variant"]);
   });
 
   it("merges and resets localized default labels via setLustrousLabels()", () => {

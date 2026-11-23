@@ -16,6 +16,8 @@ dismissSnack(id);
 | Attribute | Values | Default |
 | :-- | :-- | :-- |
 | `position` | `bottom-start` · `bottom-end` · `top-start` · `top-end` | `"bottom-start"` |
-| `max` | Maximum stacked notifications | `3` |
+| `max` | Maximum stacked notifications (set `max="1"` for single-toast replacement) | `3` |
 | `label` | Accessible region label | `getLustrousLabels().notifications` |
 | `close-label` | Accessible close button label | `getLustrousLabels().close` |
+
+> **Operational note:** `<lustrous-snackbar>` defaults to `max="3"` so stacked toasts remain visible simultaneously. For single-notification replacement behavior (where each new toast immediately replaces the active one), set `max="1"` on `<lustrous-snackbar max="1">`.

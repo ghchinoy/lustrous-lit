@@ -9,5 +9,7 @@ Full-screen immersive video player built on `<lustrous-modal scrim="immersive">`
 | `captions-src` | WebVTT captions track URL | |
 | `heading` | Accessible dialog & video title | `"Video preview"` |
 | `autoplay` | Boolean (`autoplay="false"` to disable) | `true` |
+| `rounded` | Applies larger `l` (`14px`) corner radius to the stage | `false` |
+| `navigation` | Gallery `{ previousLabel, nextLabel, onPrevious?, onNext? }` controls + arrow shortcuts (property) | `undefined` |
 | `close-label` | Close button accessible name | `getLustrousLabels().close` |
 | `open` | Opens the modal lightbox | `false` |

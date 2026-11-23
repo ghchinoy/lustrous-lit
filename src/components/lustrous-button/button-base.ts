@@ -5,7 +5,15 @@ import { LustrousElement } from "../../theme/lustrous-element.js";
 import { lustrousBase, lustrousFocusRing, lustrousStateLayer, lustrousType } from "../../theme/theme.js";
 import { lustrousChevronStyles } from "../lustrous-chevron-icon/lustrous-chevron-icon.js";
 
-export type LustrousButtonVariant = "accent" | "tonal" | "bright" | "outline" | "on-surface" | "on-surface-variant" | "translucent";
+export type LustrousButtonVariant =
+  | "primary"
+  | "accent"
+  | "tonal"
+  | "bright"
+  | "outline"
+  | "on-surface"
+  | "on-surface-variant"
+  | "translucent";
 export type LustrousButtonSize = "m" | "s" | "xs";
 export type LustrousButtonShape = "rounded" | "pill";
 
@@ -46,6 +54,14 @@ export const lustrousButtonStyles = [
       border-radius: var(--lustrous-radius-full);
     }
 
+    .variant-primary {
+      --lustrous-text-muted: color-mix(in srgb, var(--lustrous-color-on-primary) 80%, transparent);
+      background-color: var(--lustrous-color-primary);
+      color: var(--lustrous-color-on-primary);
+    }
+    .variant-primary.focus-ring:focus-visible {
+      outline-color: var(--lustrous-color-on-surface);
+    }
     .variant-accent {
       --lustrous-text-muted: var(--lustrous-color-on-accent);
       background-color: var(--lustrous-color-accent);
@@ -99,6 +115,7 @@ export const lustrousButtonStyles = [
       color: var(--lustrous-color-state-disabled-label);
       box-shadow: none;
     }
+    .btn.disabled.variant-primary,
     .btn.disabled.variant-accent,
     .btn.disabled.variant-tonal,
     .btn.disabled.variant-bright,

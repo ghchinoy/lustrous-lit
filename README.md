@@ -56,12 +56,12 @@ For single-file HTML prototypes or sandboxes without a bundler, load the theme a
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ghchinoy/lustrous-lit@0.1.0/fonts/lustrous-fonts.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ghchinoy/lustrous-lit@0.1.0/dist/lustrous-theme.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ghchinoy/lustrous-lit@0.2.0/fonts/lustrous-fonts.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ghchinoy/lustrous-lit@0.2.0/dist/lustrous-theme.css" />
     <script type="module">
-      import "https://esm.sh/@ghchinoy/lustrous-lit@0.1.0/components/lustrous-flex";
-      import "https://esm.sh/@ghchinoy/lustrous-lit@0.1.0/components/lustrous-text";
-      import "https://esm.sh/@ghchinoy/lustrous-lit@0.1.0/components/lustrous-button";
+      import "https://esm.sh/@ghchinoy/lustrous-lit@0.2.0/components/lustrous-flex";
+      import "https://esm.sh/@ghchinoy/lustrous-lit@0.2.0/components/lustrous-text";
+      import "https://esm.sh/@ghchinoy/lustrous-lit@0.2.0/components/lustrous-button";
     </script>
   </head>
   <body>

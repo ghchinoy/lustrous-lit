@@ -11,6 +11,7 @@ export default meta;
 export const Variants: StoryObj = {
   render: () => html`
     <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px;">
+      <lustrous-button variant="primary" icon="bolt">Primary</lustrous-button>
       <lustrous-button icon="bolt">Accent</lustrous-button>
       <lustrous-button variant="tonal">Tonal</lustrous-button>
       <lustrous-button variant="outline">Outline</lustrous-button>

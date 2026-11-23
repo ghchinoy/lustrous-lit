@@ -5,7 +5,7 @@ import { LustrousButtonBase, lustrousButtonStyles, type LustrousButtonSize, type
 import { renderChevron, type LustrousChevronDirection } from "../lustrous-chevron-icon/lustrous-chevron-icon.js";
 import { renderIcon, type LustrousIconName } from "../lustrous-icon/lustrous-icon.js";
 
-export type LustrousIconButtonVariant = LustrousButtonVariant;
+export type LustrousIconButtonVariant = Exclude<LustrousButtonVariant, "primary">;
 export type LustrousIconButtonSize = LustrousButtonSize;
 
 const ICON_SIZE = { m: "m", s: "s", xs: "xs" } as const;
@@ -55,6 +55,12 @@ export class LustrousIconButton extends LustrousButtonBase {
       }
       .size-xs .badge {
         --_badge-offset: -6px;
+      }
+      @media (max-width: 768px) {
+        .size-s {
+          min-width: var(--_lustrous-compact-s-min-target, 44px);
+          min-height: var(--_lustrous-compact-s-min-target, 44px);
+        }
       }
     `,
   ];

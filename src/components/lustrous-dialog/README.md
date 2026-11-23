@@ -22,6 +22,9 @@ Inline or `modal` dialog card built on `<lustrous-modal>`. Supports `s` (`320px`
 | `heading` | `string` | `""` | Dialog title; also names the dialog. |
 | `size` | `"s" \| "m" \| "l"` | `"m"` | Card width preset (`320px` / `420px` / `560px`). |
 | `modal` | `boolean` | `false` | Renders inside `<lustrous-modal>` instead of inline. |
+| `mobile-drawer` | `boolean` | `false` | Renders modal dialogs inside `<lustrous-bottom-sheet default-snap-point="1">` at `<= 768px`. |
+| `scrim-blur` | `boolean` | `false` | Blurs the modal backdrop scrim. |
+| `focus-heading` | `boolean` | `false` | Makes the `<h2>` heading focusable (`tabindex="-1"`) and focuses it on open. |
 | `open` | `boolean` | `false` | Controls modal open state. |
 | `dismissible` | `boolean` | `false` | Shows a header close icon button. |
 | `close-label` | `string` | `getLustrousLabels().close` | Accessible name of the header close button. |

@@ -12,7 +12,7 @@ const BANNED_PATTERNS = [
   /@goog\.web/i,
   /gemini-app-web/i,
   /corp\.goog/i,
-  /luminous-lit/i,
+  /\bluminous\b/i,
   /\blumi-[a-z]/i,
   /--lumi-/i,
   /IxqDiTeGoTjO36ED43Rurb/,

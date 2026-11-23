@@ -4,7 +4,7 @@ import { attrRules, toCss } from "../../internal/style-gen.js";
 import "../../theme/events.js";
 import { getLustrousLabels } from "../../theme/labels.js";
 import { LustrousElement } from "../../theme/lustrous-element.js";
-import { lustrousBase, lustrousType } from "../../theme/theme.js";
+import { lustrousBase, lustrousFocusRing, lustrousStateLayer, lustrousType } from "../../theme/theme.js";
 import { radius, type LustrousRadiusToken } from "../../theme/tokens.js";
 import "../lustrous-badge/lustrous-badge.js";
 import "../lustrous-button/lustrous-button.js";
@@ -26,13 +26,17 @@ export type LustrousBannerActionEvent = CustomEvent<{ action: LustrousBannerActi
  *
  * @slot - Extra content rendered beneath the description.
  * @fires lustrous-action - `CustomEvent<{ action: "primary" | "secondary" }>`.
+ * @fires lustrous-click - `CustomEvent<void>` when `clickable` is set and the banner surface is activated.
  * @fires lustrous-close-request - `CustomEvent<{ reason: "dismiss" }>` (cancelable; hides the banner unless canceled).
- * @csspart banner - The `<section>` banner surface.
+ * @csspart banner - The `<section>` banner container.
+ * @csspart surface - The interactive `<button>` surface when `clickable` is set.
  */
 @customElement("lustrous-banner")
 export class LustrousBanner extends LustrousElement {
   static override styles = [
     lustrousBase,
+    lustrousFocusRing,
+    lustrousStateLayer,
     css`
       :host {
         display: block;
@@ -157,9 +161,44 @@ export class LustrousBanner extends LustrousElement {
         top: var(--lustrous-space-m);
         inset-inline-end: var(--lustrous-space-m);
       }
+      .banner.clickable {
+        padding: 0;
+        gap: 0;
+      }
+      .surface-btn {
+        all: unset;
+        box-sizing: border-box;
+        position: relative;
+        isolation: isolate;
+        display: flex;
+        flex-direction: column;
+        gap: var(--lustrous-space-l);
+        width: 100%;
+        padding: var(--lustrous-space-xl);
+        border-radius: inherit;
+        color: inherit;
+        text-align: start;
+        cursor: pointer;
+      }
+      .banner.clickable.row .surface-btn {
+        flex-direction: row;
+        align-items: center;
+      }
+      .banner.clickable.row.dismissible .surface-btn {
+        padding-inline-end: 52px;
+      }
+      .banner.clickable.row .close {
+        position: absolute;
+        top: 50%;
+        inset-inline-end: var(--lustrous-space-m);
+        transform: translateY(-50%);
+      }
       @media (forced-colors: active) {
         .banner {
           border: 1px solid CanvasText;
+        }
+        .surface-btn:focus-visible {
+          outline-color: Highlight;
         }
       }
     `,
@@ -200,6 +239,8 @@ export class LustrousBanner extends LustrousElement {
   @property({ attribute: "primary-action" }) primaryAction = "";
   /** Secondary action button label. */
   @property({ attribute: "secondary-action" }) secondaryAction = "";
+  /** Makes the entire banner surface a keyboard-operable `<button>` firing `lustrous-click`. */
+  @property({ type: Boolean, reflect: true }) clickable = false;
   /** Shows a dismiss icon button. */
   @property({ type: Boolean, reflect: true }) dismissible = false;
   /** Accessible label for the dismiss button (defaults to `getLustrousLabels().dismiss`). */
@@ -225,6 +266,10 @@ export class LustrousBanner extends LustrousElement {
         cancelable: true,
       }),
     );
+  }
+
+  private onSurfaceClick() {
+    this.dispatchEvent(new CustomEvent("lustrous-click", { bubbles: true, composed: true }));
   }
 
   private onClose() {
@@ -253,31 +298,68 @@ export class LustrousBanner extends LustrousElement {
     const hasMedia = !!(this.icon || this.imageUrl);
     const separate = this.mediaPlacement === "separate" || row;
     const brightControls = this.variant !== "overlay";
-    const cls = ["banner", row ? "row" : "column", this.dismissible ? "dismissible" : "", this.heading ? "has-heading" : ""]
+    const cls = [
+      "banner",
+      row ? "row" : "column",
+      this.dismissible ? "dismissible" : "",
+      this.heading ? "has-heading" : "",
+      this.clickable ? "clickable" : "",
+    ]
       .filter(Boolean)
       .join(" ");
 
-    return html`<section part="banner" class=${cls} aria-label=${this.heading || labels.notificationBanner}>
-      <div class="top">
-        ${hasMedia && separate ? html`<span class="media">${this.renderMedia(false)}</span>` : nothing}
-        <div class="text">
-          ${this.heading || this.badge
-            ? html`<div class="title-row">
-                ${hasMedia && !separate ? html`<span class="media">${this.renderMedia(true)}</span>` : nothing}
-                ${this.heading
-                  ? html`<div class="heading" role="heading" aria-level=${this.headingLevel}>${this.heading}</div>`
-                  : nothing}
-                ${this.badge ? html`<lustrous-badge class="title-badge">${this.badge}</lustrous-badge>` : nothing}
-              </div>`
-            : nothing}
-          ${this.description ? html`<p class="description">${this.description}</p>` : nothing}
-          <slot
-            @slotchange=${(e: Event) => {
-              this.hasSlotted = (e.target as HTMLSlotElement).assignedNodes().length > 0;
-            }}
-          ></slot>
-        </div>
+    const topContent = html`<div class="top">
+      ${hasMedia && separate ? html`<span class="media">${this.renderMedia(false)}</span>` : nothing}
+      <div class="text">
+        ${this.heading || this.badge
+          ? html`<div class="title-row">
+              ${hasMedia && !separate ? html`<span class="media">${this.renderMedia(true)}</span>` : nothing}
+              ${this.heading
+                ? html`<div id="heading" class="heading" role="heading" aria-level=${this.headingLevel}>
+                    ${this.heading}
+                  </div>`
+                : nothing}
+              ${this.badge ? html`<lustrous-badge class="title-badge">${this.badge}</lustrous-badge>` : nothing}
+            </div>`
+          : nothing}
+        ${this.description ? html`<p id="description" class="description">${this.description}</p>` : nothing}
+        <slot
+          @slotchange=${(e: Event) => {
+            this.hasSlotted = (e.target as HTMLSlotElement).assignedNodes().length > 0;
+          }}
+        ></slot>
       </div>
+    </div>`;
+
+    const dismissButton = this.dismissible
+      ? html`<lustrous-icon-button
+          class="close"
+          size="s"
+          icon="close"
+          variant=${brightControls ? "bright" : "tonal"}
+          aria-label=${this.closeLabel || labels.dismiss}
+          @click=${this.onClose}
+        ></lustrous-icon-button>`
+      : nothing;
+
+    if (this.clickable) {
+      const hasVisibleText = Boolean(this.heading || this.description || this.hasSlotted);
+      return html`<section part="banner" class=${cls} aria-label=${this.heading || labels.notificationBanner}>
+        <button
+          type="button"
+          part="surface"
+          class="surface-btn state-layer focus-ring"
+          aria-label=${hasVisibleText ? nothing : labels.notificationBanner}
+          @click=${this.onSurfaceClick}
+        >
+          ${topContent}
+        </button>
+        ${dismissButton}
+      </section>`;
+    }
+
+    return html`<section part="banner" class=${cls} aria-label=${this.heading || labels.notificationBanner}>
+      ${topContent}
       ${hasActions
         ? html`<div class="actions">
             ${this.secondaryAction
@@ -294,16 +376,7 @@ export class LustrousBanner extends LustrousElement {
               : nothing}
           </div>`
         : nothing}
-      ${this.dismissible
-        ? html`<lustrous-icon-button
-            class="close"
-            size="s"
-            icon="close"
-            variant=${brightControls ? "bright" : "tonal"}
-            aria-label=${this.closeLabel || labels.dismiss}
-            @click=${this.onClose}
-          ></lustrous-icon-button>`
-        : nothing}
+      ${dismissButton}
     </section>`;
   }
 }

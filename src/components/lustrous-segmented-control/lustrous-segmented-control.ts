@@ -123,6 +123,16 @@ export class LustrousSegmentedControl extends LustrousElement {
         cursor: default;
         color: var(--lustrous-color-state-disabled-label);
       }
+      @media (max-width: 768px) {
+        .seg::before {
+          content: "";
+          position: absolute;
+          inset-inline: 0;
+          top: 50%;
+          height: 44px;
+          transform: translateY(-50%);
+        }
+      }
       .badge {
         font-family: var(--lustrous-font-code);
         font-size: 11px;

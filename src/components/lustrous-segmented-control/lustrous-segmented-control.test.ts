@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { fixture } from "../../test/fixture.js";
+import { fixture, setViewport } from "../../test/fixture.js";
 import "./lustrous-segmented-control.js";
 import type { LustrousSegmentedControl } from "./lustrous-segmented-control.js";
 
@@ -85,5 +85,14 @@ describe("lustrous-segmented-control", () => {
     await el.updateComplete;
     expect(getComputedStyle(sr.querySelector(".track")!).height).toBe("40px");
     expect(getComputedStyle(sr.querySelector(".track")!).backgroundColor).toBe("rgba(0, 0, 0, 0)");
+  });
+
+  it("expands vertical hit target to 44px via ::before at <=768px without changing track height", async () => {
+    await setViewport(400, 800);
+    const el = await make();
+    const seg = tabs(el)[0]!;
+    await expect.poll(() => getComputedStyle(seg, "::before").height).toBe("44px");
+    expect(getComputedStyle(el.shadowRoot!.querySelector(".track")!).height).toBe("32px");
+    await setViewport(1200, 800);
   });
 });

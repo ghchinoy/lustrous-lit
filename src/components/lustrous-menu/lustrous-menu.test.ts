@@ -103,4 +103,70 @@ describe("lustrous-menu", () => {
     await expect.poll(() => tip.open).toBe(true);
     expect(tip.content).toBe("Reconnect to export");
   });
+
+  it("supports action closeOnClick=false, returnFocus, background, trailingContent, and mobile submenu drill-down", async () => {
+    const returnTarget = document.createElement("button");
+    returnTarget.textContent = "Target";
+    document.body.append(returnTarget);
+
+    await setViewport(400, 800);
+    const { el, trigger } = await make([
+      { type: "action", label: "Stay open", closeOnClick: false, background: "accent-container" },
+      { type: "toggle", label: "Sync", checked: true, trailingContent: "PRO" },
+      {
+        type: "submenu",
+        label: "Export",
+        items: [{ type: "action", label: "CSV" }],
+      },
+    ]);
+    el.returnFocus = returnTarget;
+    await el.updateComplete;
+
+    await userEvent.click(trigger);
+    await el.updateComplete;
+    const [stayBtn, toggleBtn, subBtn] = [...root(el).querySelectorAll<HTMLElement>(".item")];
+    expect(stayBtn!.getAttribute("data-bg")).toBe("accent-container");
+    expect(toggleBtn!.querySelector(".trail-custom")!.textContent).toBe("PRO");
+
+    stayBtn!.click();
+    await el.updateComplete;
+    expect(el.open).toBe(true);
+
+    subBtn!.click();
+    await el.updateComplete;
+    const backBtn = root(el).querySelector<HTMLElement>("[part=back-button]")!;
+    expect(backBtn).not.toBeNull();
+    expect(backBtn.getAttribute("aria-label")).toBe("Back to main menu");
+    expect(root(el).textContent).toContain("CSV");
+
+    const csvItem = [...root(el).querySelectorAll<HTMLElement>(".item")].find((n) => n.textContent?.includes("CSV"))!;
+    csvItem.click();
+    await el.updateComplete;
+    expect(el.open).toBe(false);
+    expect(document.activeElement).toBe(returnTarget);
+
+    returnTarget.remove();
+    await setViewport(1200, 800);
+  });
+
+  it("absorbs first pointer click on hover-opened menu and closes on second click", async () => {
+    await setViewport(1200, 800);
+    const { el, trigger } = await make([{ type: "action", label: "Inspect" }]);
+    el.openOnHover = true;
+    el.hoverOpenDelay = 0;
+    await el.updateComplete;
+
+    trigger.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+    await expect.poll(() => el.open).toBe(true);
+
+    // First pointer click is absorbed; menu stays open
+    trigger.dispatchEvent(new MouseEvent("click", { detail: 1, bubbles: true }));
+    await el.updateComplete;
+    expect(el.open).toBe(true);
+
+    // Second pointer click closes
+    trigger.dispatchEvent(new MouseEvent("click", { detail: 1, bubbles: true }));
+    await el.updateComplete;
+    expect(el.open).toBe(false);
+  });
 });

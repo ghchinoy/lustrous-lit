@@ -88,4 +88,17 @@ describe("lustrous-snackbar", () => {
     await el.updateComplete;
     expect(snacks(el)).toHaveLength(0);
   });
+
+  it("defaults to max=3, supports max=1 single-toast replacement, and omits aria-modal", async () => {
+    const el = await fixture<LustrousSnackbar>(`<lustrous-snackbar></lustrous-snackbar>`);
+    expect(el.max).toBe(3);
+    el.max = 1;
+    el.show("First", { duration: 0 });
+    el.show("Second", { duration: 0 });
+    await frame();
+    await el.updateComplete;
+    expect(snacks(el)).toHaveLength(1);
+    expect(snacks(el)[0]!.textContent).toContain("Second");
+    expect(el.shadowRoot!.querySelector("[aria-modal]")).toBeNull();
+  });
 });

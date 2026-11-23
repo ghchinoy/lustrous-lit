@@ -2,7 +2,10 @@ import { css, html, nothing, type PropertyValues, type TemplateResult } from "li
 import { customElement, property, state } from "lit/decorators.js";
 import { getLustrousLabels } from "../../theme/labels.js";
 import { LustrousElement } from "../../theme/lustrous-element.js";
+import { LustrousMediaController } from "../../theme/media.js";
 import { lustrousBase, lustrousType } from "../../theme/theme.js";
+import { breakpoints } from "../../theme/tokens.js";
+import "../lustrous-bottom-sheet/lustrous-bottom-sheet.js";
 import "../lustrous-button/lustrous-button.js";
 import "../lustrous-icon-button/lustrous-icon-button.js";
 import "../lustrous-modal/lustrous-modal.js";
@@ -86,7 +89,26 @@ export class LustrousDialog extends LustrousElement {
       h2 {
         margin: 0;
         min-width: 0;
+        outline: none;
         ${lustrousType("headline-small")}
+      }
+      .drawer-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--lustrous-space-m);
+      }
+      .drawer-body {
+        ${lustrousType("body-medium")}
+      }
+      .drawer-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: var(--lustrous-space-s);
+      }
+      .drawer-actions[hidden] {
+        display: none;
       }
       .body {
         min-height: 0;
@@ -137,11 +159,23 @@ export class LustrousDialog extends LustrousElement {
   @property({ type: Boolean, attribute: "close-disabled" }) closeDisabled = false;
   @property({ attribute: false }) onClose?: (e: MouseEvent) => void;
   @property({ type: Boolean, reflect: true }) modal = false;
+  /** Renders modal dialogs inside a `<lustrous-bottom-sheet default-snap-point="1">` at `<= 768px`. */
+  @property({ type: Boolean, reflect: true, attribute: "mobile-drawer" }) mobileDrawer = false;
+  /** Blurs the modal backdrop scrim (`backdrop-filter: blur`). */
+  @property({ type: Boolean, reflect: true, attribute: "scrim-blur" }) scrimBlur = false;
+  /** Makes the `<h2>` heading focusable (`tabindex="-1"`) and focuses it on open when `initialFocus` is unset. */
+  @property({ type: Boolean, reflect: true, attribute: "focus-heading" }) focusHeading = false;
   @property({ attribute: false }) returnFocus?: HTMLElement | null;
-  @property({ attribute: false }) initialFocus?: HTMLElement | null;
+  @property({ attribute: false }) initialFocus?: HTMLElement | (() => HTMLElement | null | undefined) | null;
   @property({ type: Boolean, reflect: true }) open = false;
 
   @state() private hasCustomActions = false;
+  private readonly mobile = new LustrousMediaController(this, breakpoints.mobile);
+
+  /** The rendered `<h2>` heading element (useful for programmatic focus management). */
+  get headingElement(): HTMLHeadingElement | null {
+    return this.renderRoot.querySelector<HTMLHeadingElement>("h2[part=heading]");
+  }
 
   override connectedCallback(): void {
     super.connectedCallback();
@@ -192,6 +226,51 @@ export class LustrousDialog extends LustrousElement {
     }
   }
 
+  private renderHeading(showClose: boolean, cls: string): TemplateResult {
+    return html`<div class=${cls}>
+      <h2 part="heading" id="heading" tabindex=${this.focusHeading ? "-1" : nothing}>${this.heading}</h2>
+      ${showClose
+        ? html`<lustrous-icon-button
+            part="close-button"
+            icon="close"
+            size="s"
+            variant="on-surface"
+            ?disabled=${this.closeDisabled}
+            aria-label=${this.closeLabel || getLustrousLabels().close}
+            @click=${this.onCloseClick}
+          ></lustrous-icon-button>`
+        : nothing}
+    </div>`;
+  }
+
+  private renderActions(hasActions: boolean, cls: string): TemplateResult {
+    return html`<div part="actions" class=${cls} ?hidden=${!hasActions}>
+      <slot
+        name="actions"
+        @slotchange=${(e: Event) => {
+          this.hasCustomActions = (e.target as HTMLSlotElement).assignedElements().length > 0;
+        }}
+      >
+        ${this.secondaryAction
+          ? html`<lustrous-button
+              variant="on-surface"
+              ?disabled=${this.secondaryDisabled}
+              @click=${() => this.onAction("secondary")}
+              >${this.secondaryAction}</lustrous-button
+            >`
+          : nothing}
+        ${this.primaryAction
+          ? html`<lustrous-button
+              variant="accent"
+              ?disabled=${this.primaryDisabled}
+              @click=${() => this.onAction("primary")}
+              >${this.primaryAction}</lustrous-button
+            >`
+          : nothing}
+      </slot>
+    </div>`;
+  }
+
   private renderCard(): TemplateResult {
     const builtIn = this.primaryAction || this.secondaryAction;
     const hasActions = Boolean(builtIn) || this.hasCustomActions;
@@ -206,56 +285,40 @@ export class LustrousDialog extends LustrousElement {
       aria-label=${nonModalLabel}
     >
       <div part="scroller" class="scroller">
-        <div class="heading">
-          <h2 part="heading" id="heading">${this.heading}</h2>
-          ${showClose
-            ? html`<lustrous-icon-button
-                part="close-button"
-                icon="close"
-                size="s"
-                variant="on-surface"
-                ?disabled=${this.closeDisabled}
-                aria-label=${this.closeLabel || getLustrousLabels().close}
-                @click=${this.onCloseClick}
-              ></lustrous-icon-button>`
-            : nothing}
-        </div>
+        ${this.renderHeading(showClose, "heading")}
         <div part="body" class="body"><slot></slot></div>
-        <div part="actions" class="actions" ?hidden=${!hasActions}>
-          <slot
-            name="actions"
-            @slotchange=${(e: Event) => {
-              this.hasCustomActions = (e.target as HTMLSlotElement).assignedElements().length > 0;
-            }}
-          >
-            ${this.secondaryAction
-              ? html`<lustrous-button
-                  variant="on-surface"
-                  ?disabled=${this.secondaryDisabled}
-                  @click=${() => this.onAction("secondary")}
-                  >${this.secondaryAction}</lustrous-button
-                >`
-              : nothing}
-            ${this.primaryAction
-              ? html`<lustrous-button
-                  variant="accent"
-                  ?disabled=${this.primaryDisabled}
-                  @click=${() => this.onAction("primary")}
-                  >${this.primaryAction}</lustrous-button
-                >`
-              : nothing}
-          </slot>
-        </div>
+        ${this.renderActions(hasActions, "actions")}
       </div>
     </div>`;
   }
 
   protected override render() {
     if (!this.modal) return this.renderCard();
+    const initialFocus = this.initialFocus ?? (this.focusHeading ? () => this.headingElement : undefined);
+    if (this.mobileDrawer && this.mobile.matches) {
+      const builtIn = this.primaryAction || this.secondaryAction;
+      const hasActions = Boolean(builtIn) || this.hasCustomActions;
+      const showClose = this.dismissible || Boolean(this.onClose);
+      return html`<lustrous-bottom-sheet
+        .open=${this.open}
+        default-snap-point="1"
+        ?scrim-blur=${this.scrimBlur}
+        .returnFocus=${this.returnFocus}
+        .initialFocus=${initialFocus}
+        label=${this.heading || this.label || "Dialog"}
+        @lustrous-toggle=${this.onModalToggle}
+      >
+        <slot name="trigger" slot="trigger"></slot>
+        <div slot="header">${this.renderHeading(showClose, "drawer-header")}</div>
+        <div part="body" class="drawer-body"><slot></slot></div>
+        <div slot="footer" ?hidden=${!hasActions}>${this.renderActions(hasActions, "drawer-actions")}</div>
+      </lustrous-bottom-sheet>`;
+    }
     return html`<lustrous-modal
       .open=${this.open}
+      ?scrim-blur=${this.scrimBlur}
       .returnFocus=${this.returnFocus}
-      .initialFocus=${this.initialFocus}
+      .initialFocus=${initialFocus}
       label=${this.heading || this.label || "Dialog"}
       @lustrous-toggle=${this.onModalToggle}
     >

@@ -44,4 +44,12 @@ describe("lustrous-icon", () => {
     expect(svgEl.classList.contains("lustrous-icon-directional")).toBe(true);
     expect(css(svgEl, "transform")).not.toBe("none");
   });
+
+  it("mirrors built-in backspace icon in RTL", async () => {
+    const wrap = await fixture<HTMLDivElement>(`<div dir="rtl"><lustrous-icon name="backspace"></lustrous-icon></div>`);
+    const icon = wrap.querySelector("lustrous-icon")!;
+    await icon.updateComplete;
+    const svgEl = icon.shadowRoot!.querySelector("svg")!;
+    expect(svgEl.classList.contains("lustrous-icon-directional")).toBe(true);
+  });
 });

@@ -6,7 +6,7 @@ import { LustrousBox, lustrousBoxStyles } from "../lustrous-box/lustrous-box.js"
 export type LustrousScrollableBoxScrim = "both" | "start" | "end" | "none";
 export type LustrousScrollbarVisibility = "hover" | "always" | "hidden";
 
-const SCRIM = "36px";
+const SCRIM = "var(--_lustrous-scrim-size, 36px)";
 const fadeY = (start: boolean, end: boolean) =>
   `linear-gradient(to bottom, ${start ? `transparent 0, black min(${SCRIM}, var(--_ys, 0px))` : "black 0"}, ${
     end ? `black calc(100% - min(${SCRIM}, var(--_ye, 0px))), transparent 100%` : "black 100%"
@@ -110,6 +110,8 @@ export class LustrousScrollableBox extends LustrousBox {
   ];
 
   @property({ reflect: true }) scrim: LustrousScrollableBoxScrim | "true" | "false" = "both";
+  /** Edge scrim fade length in pixels; scoped per viewport so nested scroll boxes do not inherit it. @default 36 */
+  @property({ type: Number, reflect: true, attribute: "scrim-size" }) scrimSize = 36;
   @property({ reflect: true }) scrollbar: LustrousScrollbarVisibility = "hover";
   @property({ type: Boolean, reflect: true }) compact = false;
   @property() label = "";
@@ -130,6 +132,7 @@ export class LustrousScrollableBox extends LustrousBox {
 
   protected override firstUpdated(changed: PropertyValues): void {
     super.firstUpdated(changed);
+    this.syncScrimSize();
     this.ro = new ResizeObserver(() => this.measure());
     this.ro.observe(this.viewport);
     this.ro.observe(this.renderRoot.querySelector(".content")!);
@@ -138,7 +141,14 @@ export class LustrousScrollableBox extends LustrousBox {
 
   protected override updated(changed: PropertyValues): void {
     super.updated(changed);
+    if (changed.has("scrimSize")) this.syncScrimSize();
     if (changed.has("overflow") || changed.has("overflowX") || changed.has("overflowY")) this.measure();
+  }
+
+  private syncScrimSize() {
+    if (!this.viewport?.style) return;
+    const px = Number.isFinite(this.scrimSize) ? Math.max(0, this.scrimSize) : 36;
+    this.viewport.style.setProperty("--_lustrous-scrim-size", `${px}px`);
   }
 
   private onScroll() {

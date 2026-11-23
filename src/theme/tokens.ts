@@ -28,10 +28,10 @@ export const lightColors = {
   "surface-bright": "#ffffff",
   "surface-dim": "#f1f5f9",
   "surface-background": "#f8fafc",
-  "surface-container-low": "#f8fafc",
+  "surface-container-low": "#f4f7fb",
   "surface-container": "#f1f5f9",
   "surface-container-high": "#e2e8f0",
-  "surface-container-highest": "#cbd5e1",
+  "surface-container-highest": "#d5dee9",
   "surface-accent": "#dbeafe",
   "on-surface": "#0f172a",
   "on-surface-control": "#0f172a",
@@ -139,7 +139,7 @@ export const lightColors = {
 
 export type LustrousColorToken = keyof typeof lightColors;
 
-/** Dark theme overrides: Obsidian Mineral Slate + Luminous Sapphire. */
+/** Dark theme overrides: Obsidian Mineral Slate + Lustrous Sapphire. */
 export const darkColors: Partial<Record<LustrousColorToken, string>> = {
   background: "#0b0f17",
   "on-background": "#e2e8f0",
@@ -154,7 +154,7 @@ export const darkColors: Partial<Record<LustrousColorToken, string>> = {
   "surface-accent": "#172554",
   "on-surface": "#f1f5f9",
   "on-surface-control": "#f1f5f9",
-  "on-surface-variant": "#94a3b8",
+  "on-surface-variant": "#9aa9be",
   "on-surface-low": "rgba(241, 245, 249, 0.10)",
   outline: "#8496ae",
   "outline-variant": "#334155",

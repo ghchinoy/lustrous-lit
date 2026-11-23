@@ -62,6 +62,11 @@ export class LustrousSearchBar extends LustrousElement {
         padding-inline: 0;
         ${lustrousType("body-small")}
       }
+      @media (max-width: 768px) {
+        .surface {
+          min-height: 44px;
+        }
+      }
       .floating {
         border: 1px solid var(--lustrous-color-outline);
         background-color: var(--lustrous-color-surface-bright);
@@ -268,7 +273,7 @@ export class LustrousSearchBar extends LustrousElement {
         type="search"
         enterkeyhint="search"
         autocomplete="off"
-        dir="auto"
+        dir=${this.value ? "auto" : nothing}
         .value=${live(this.value)}
         placeholder=${this.placeholder}
         aria-label=${ariaLabel}

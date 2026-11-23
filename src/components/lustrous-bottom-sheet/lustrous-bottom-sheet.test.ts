@@ -87,4 +87,23 @@ describe("lustrous-bottom-sheet", () => {
     expect(el.expanded).toBe(true);
     expect(sheetY(el)).toBe(0);
   });
+
+  it("wraps body in lustrous-scrollable-box by default and supports header/footer slots and scrollable=false", async () => {
+    await setViewport(400, 800);
+    const el = await fixture<LustrousBottomSheet>(
+      `<lustrous-bottom-sheet open default-snap-point="1" body-scrim="end"><div slot="header">Header</div><div>Body</div><div slot="footer">Footer</div></lustrous-bottom-sheet>`,
+    );
+    await el.updateComplete;
+    const scrollBox = el.shadowRoot!.querySelector("lustrous-scrollable-box");
+    expect(scrollBox).not.toBeNull();
+    expect(scrollBox!.getAttribute("scrim")).toBe("end");
+    expect(el.shadowRoot!.querySelector<HTMLElement>("[part=header]")!.hidden).toBe(false);
+    expect(el.shadowRoot!.querySelector<HTMLElement>("[part=footer]")!.hidden).toBe(false);
+
+    el.scrollable = false;
+    await el.updateComplete;
+    expect(el.shadowRoot!.querySelector("lustrous-scrollable-box")).toBeNull();
+    el.open = false;
+    await el.updateComplete;
+  });
 });

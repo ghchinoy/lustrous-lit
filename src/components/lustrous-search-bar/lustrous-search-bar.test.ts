@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { userEvent } from "vitest/browser";
-import { css, fixture } from "../../test/fixture.js";
+import { css, fixture, setViewport } from "../../test/fixture.js";
 import type { LustrousSearchBar } from "./lustrous-search-bar.js";
 import "./lustrous-search-bar.js";
 
@@ -70,5 +70,23 @@ describe("lustrous-search-bar", () => {
     form.reset();
     await el.updateComplete;
     expect(el.value).toBe("initial");
+  });
+
+  it("omits dir=auto while empty for RTL placeholder alignment and enforces 44px mobile height on size=s", async () => {
+    await setViewport(1200, 800);
+    const el = await fixture<LustrousSearchBar>(
+      `<lustrous-search-bar size="s" placeholder="Search"></lustrous-search-bar>`,
+    );
+    const surface = el.shadowRoot!.querySelector<HTMLElement>("[part=surface]")!;
+    expect(input(el).hasAttribute("dir")).toBe(false);
+    expect(css(surface, "height")).toBe("36px");
+
+    el.value = "hello";
+    await el.updateComplete;
+    expect(input(el).getAttribute("dir")).toBe("auto");
+
+    await setViewport(400, 800);
+    await expect.poll(() => parseFloat(css(surface, "height"))).toBeGreaterThanOrEqual(44);
+    await setViewport(1200, 800);
   });
 });

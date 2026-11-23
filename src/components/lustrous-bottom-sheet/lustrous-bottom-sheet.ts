@@ -2,6 +2,8 @@ import { css, html, nothing, type PropertyValues } from "lit";
 import { customElement, property, query, state } from "lit/decorators.js";
 import "../../theme/events.js";
 import { LustrousModal } from "../lustrous-modal/lustrous-modal.js";
+import "../lustrous-scrollable-box/lustrous-scrollable-box.js";
+import type { LustrousScrollableBoxScrim } from "../lustrous-scrollable-box/lustrous-scrollable-box.js";
 
 /** Initial peek fraction of viewport height when content exceeds half the viewport. */
 const PEEK_FRACTION = 0.5;
@@ -17,6 +19,8 @@ const SWIPE_THRESHOLD = 80;
  * swipe-to-close on the grab handle.
  *
  * @slot - Sheet body content.
+ * @slot header - Optional fixed header rendered above the scrollable body.
+ * @slot footer - Optional fixed footer rendered below the scrollable body.
  * @slot trigger - Optional trigger element that opens the sheet on click.
  * @fires lustrous-close-request - `CustomEvent<{ reason: "swipe" | "escape" | "scrim" }>` (cancelable).
  * @fires lustrous-toggle - `CustomEvent<{ open: boolean }>` after opening or closing.
@@ -24,7 +28,9 @@ const SWIPE_THRESHOLD = 80;
  * @csspart viewport - The bottom-aligned viewport wrapper.
  * @csspart sheet - The sheet surface.
  * @csspart handle - The drag handle area.
- * @csspart body - The scrollable content container.
+ * @csspart header - Optional fixed header slot wrapper.
+ * @csspart body - The scrollable content container (`<lustrous-scrollable-box>` when `scrollable`, otherwise `<div>`).
+ * @csspart footer - Optional fixed footer slot wrapper.
  */
 @customElement("lustrous-bottom-sheet")
 export class LustrousBottomSheet extends LustrousModal {
@@ -74,15 +80,35 @@ export class LustrousBottomSheet extends LustrousModal {
         border-radius: var(--lustrous-radius-full);
         background-color: var(--lustrous-color-on-surface-variant);
       }
+      .header,
+      .footer {
+        flex-shrink: 0;
+        padding: 0 var(--lustrous-space-l);
+      }
+      .header {
+        padding-bottom: var(--lustrous-space-s);
+      }
+      .footer {
+        padding-top: var(--lustrous-space-m);
+        padding-bottom: var(--lustrous-space-l);
+      }
+      .header[hidden],
+      .footer[hidden] {
+        display: none;
+      }
       .body {
         display: flex;
         flex-direction: column;
+        flex: 1 1 auto;
         min-height: 0;
         padding: 0 var(--lustrous-space-l) var(--lustrous-space-l);
         overflow-y: hidden;
         overscroll-behavior-y: contain;
       }
-      .sheet.expanded .body {
+      .body-scroll {
+        padding: 0;
+      }
+      .sheet.expanded .body:not(.body-scroll) {
         overflow-y: auto;
       }
       @keyframes lustrous-sheet-up {
@@ -120,9 +146,21 @@ export class LustrousBottomSheet extends LustrousModal {
    */
   @property({ type: Number, reflect: true, attribute: "default-snap-point" }) defaultSnapPoint: 0.5 | 1 = 0.5;
 
+  /** Wraps default slot body content in `<lustrous-scrollable-box>`. Set `scrollable="false"` to manage scrolling manually. @default true */
+  @property({
+    reflect: true,
+    converter: { fromAttribute: (v) => v !== "false", toAttribute: (v) => (v ? "" : "false") },
+  })
+  scrollable = true;
+
+  /** Edge scrim fade applied to `<lustrous-scrollable-box>` when `scrollable` is true. @default "both" */
+  @property({ reflect: true, attribute: "body-scrim" }) bodyScrim: LustrousScrollableBoxScrim = "both";
+
   @query(".sheet") private sheet!: HTMLElement;
   @state() private entering = false;
   @state() private dragging = false;
+  @state() private hasHeader = false;
+  @state() private hasFooter = false;
   private dragStartY = 0;
   private dragBaseY = 0;
   private dragDy = 0;
@@ -132,6 +170,14 @@ export class LustrousBottomSheet extends LustrousModal {
   constructor() {
     super();
     if (!this.label) this.label = "Bottom sheet";
+  }
+
+  override connectedCallback(): void {
+    super.connectedCallback();
+    if (this.children) {
+      this.hasHeader = [...this.children].some((c) => c.getAttribute("slot") === "header");
+      this.hasFooter = [...this.children].some((c) => c.getAttribute("slot") === "footer");
+    }
   }
 
   override disconnectedCallback(): void {
@@ -268,7 +314,33 @@ export class LustrousBottomSheet extends LustrousModal {
             >
               <span></span>
             </div>
-            <div part="body" class="body"><slot></slot></div>
+            <div part="header" class="header" ?hidden=${!this.hasHeader}>
+              <slot
+                name="header"
+                @slotchange=${(e: Event) => {
+                  this.hasHeader = (e.target as HTMLSlotElement).assignedNodes().length > 0;
+                }}
+              ></slot>
+            </div>
+            ${this.scrollable
+              ? html`<lustrous-scrollable-box
+                  part="body"
+                  class="body body-scroll"
+                  overflow-y=${this.expanded ? "auto" : "hidden"}
+                  padding-inline="l"
+                  padding-bottom=${this.hasFooter ? "none" : "l"}
+                  scrim=${this.bodyScrim}
+                  ><slot></slot
+                ></lustrous-scrollable-box>`
+              : html`<div part="body" class="body"><slot></slot></div>`}
+            <div part="footer" class="footer" ?hidden=${!this.hasFooter}>
+              <slot
+                name="footer"
+                @slotchange=${(e: Event) => {
+                  this.hasFooter = (e.target as HTMLSlotElement).assignedNodes().length > 0;
+                }}
+              ></slot>
+            </div>
           </div>
         </div>
       </dialog>`;
