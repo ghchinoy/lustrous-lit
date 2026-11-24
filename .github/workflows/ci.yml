@@ -62,6 +62,7 @@ jobs:
         run: pnpm build:example
 
       - name: Build Storybook
+        id: storybook
         run: pnpm build-storybook
 
       - name: Run visual regression tests
@@ -79,7 +80,7 @@ jobs:
           retention-days: 14
 
       - name: Run WCAG 2.1 AA accessibility checks
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.storybook.outcome == 'success' }}
         id: a11y
         run: pnpm test:a11y
 
