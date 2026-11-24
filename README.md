@@ -52,6 +52,17 @@ Install into OpenCode, Claude Code, Cursor, Gemini CLI, Codex, or Antigravity:
 npx skills add ghchinoy/lustrous-lit
 ```
 
+#### Recommended Companion Plugin: Modern Web Guidance
+
+Pair `plugins/lustrous-lit` with Chrome's **[Modern Web Guidance](https://developer.chrome.com/docs/modern-web-guidance)** (`GoogleChrome/modern-web-guidance`) for Core Web Vitals (`fetchpriority`, `content-visibility`, INP), CSS Scroll-Driven Animations, View Transitions, responsive data tables, autofill patterns, and Web Components fundamentals aligned to Lustrous's **Baseline 2024** target:
+
+```bash
+npx modern-web-guidance@latest install
+# or: npx skills add GoogleChrome/modern-web-guidance
+```
+
+See [`plugins/lustrous-lit/skills/lustrous-lit/references/companion-plugins.md`](./plugins/lustrous-lit/skills/lustrous-lit/references/companion-plugins.md) for the recommended `AGENTS.md` precedence rules so agents prefer `<lustrous-*>` components and `--lustrous-*` tokens first while delegating platform-level optimizations to Modern Web Guidance.
+
 ### Zero-Build CDN Quick Try (Plain HTML)
 
 For single-file HTML prototypes or sandboxes without a bundler, load the theme and fonts from jsDelivr and ESM modules from `esm.sh`:

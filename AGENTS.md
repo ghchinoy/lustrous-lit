@@ -47,6 +47,10 @@ Repository developer and coding-agent guide for the **Lustrous Design System** (
 
 Requires **Node.js `>= 22.23.4`** and **`pnpm@10.34.6`**.
 
+This project's Baseline target is Baseline 2024.
+
+> **Modern Web Guidance precedence:** When [Modern Web Guidance](https://developer.chrome.com/docs/modern-web-guidance) is installed alongside `plugins/lustrous-lit`, prioritize existing `<lustrous-*>` components, `--lustrous-*` tokens, and strict CSP/SSR rules first. Use Modern Web Guidance for platform capabilities beyond the component catalog (Core Web Vitals, CSS Scroll-Driven Animations, View Transitions, autofill patterns, Web Components platform fundamentals) and adapt any suggested patterns through Lustrous tokens and CSSOM `--_lustrous-*` custom properties. See `plugins/lustrous-lit/skills/lustrous-lit/references/companion-plugins.md`.
+
 ---
 
 ## Commands
