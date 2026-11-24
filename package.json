@@ -65,8 +65,10 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && node scripts/build-css.mjs && pnpm run analyze",
+    "build": "tsc -p tsconfig.build.json && node scripts/build-css.mjs && pnpm run analyze && node scripts/sync-plugin.mjs",
     "analyze": "cem analyze",
+    "sync:plugin": "node scripts/sync-plugin.mjs",
+    "check:plugin": "bash scripts/validate-plugins.sh && node scripts/sync-plugin.mjs --check",
     "typecheck": "tsc --noEmit",
     "typecheck:all": "tsc --noEmit && tsc --noEmit -p examples/app",
     "test": "vitest run",

@@ -2,13 +2,33 @@
 name: lustrous-lit
 description: Build accessible, responsive web interfaces using the Lustrous Design System (@ghchinoy/lustrous-lit) for Lit 3 and standard HTML custom elements. Use when installing or theming Lustrous, composing layout and typography primitives, wiring form-associated controls, opening top-layer overlays, configuring app-shell navigation, binding keyboard shortcuts, rendering/registering icons, or styling with --lustrous-* CSS tokens.
 license: Apache-2.0
+compatibility: Works with Lit 3, plain HTML, React 19, Vue 3, Angular, Svelte 5, and @lit-labs/ssr. Lookup script requires Node.js >= 22.23.4.
 metadata:
+  author: ghchinoy
   version: "0.2.0"
 ---
 
 # Lustrous Design System (`@ghchinoy/lustrous-lit`)
 
-`@ghchinoy/lustrous-lit` is a zero-CDN, WCAG 2.1 AA, CSP-safe, and `@lit-labs/ssr`-compatible web component design system built on Lit 3, `ElementInternals`, native `<dialog>`, and the Popover API.
+[`@ghchinoy/lustrous-lit`](https://www.npmjs.com/package/@ghchinoy/lustrous-lit) ([GitHub repository](https://github.com/ghchinoy/lustrous-lit)) is a zero-CDN, WCAG 2.1 AA, CSP-safe, and `@lit-labs/ssr`-compatible web component design system built on Lit 3, `ElementInternals`, native `<dialog>`, and the Popover API.
+
+## Progressive Disclosure & Bundled Resources
+
+- [`references/component-catalog.md`](references/component-catalog.md) — Generated API reference for every `<lustrous-*>` custom element (module paths, attributes, events, slots, and `::part(...)` hooks).
+- [`references/theming-and-tokens.md`](references/theming-and-tokens.md) — Deep dive on `@layer lustrous`, `setLustrousTheme`, nested theme islands, shadow-root scoping, localization (`setLustrousLabels`), OFL-1.1 fonts, and full `--lustrous-*` token scales.
+- [`references/responsive-and-layout.md`](references/responsive-and-layout.md) — Two-layer responsive architecture (`768px` content vs `959.98px` shell), CSS-only responsive attributes, `@container` queries, `<lustrous-popover mobile-drawer>`, and `LustrousViewportController`.
+- [`references/frameworks-and-ssr.md`](references/frameworks-and-ssr.md) — Integration patterns for Plain HTML + Import Maps, Lit 3, React 19 / `@lit/react`, Vue 3, Angular, Svelte 5, embedded Go/Rust/Python servers, strict CSP headers, and `@lit-labs/ssr` hydration.
+- [`scripts/lookup-lustrous.mjs`](scripts/lookup-lustrous.mjs) — Fast CLI inspector querying [`assets/catalog.json`](assets/catalog.json) for component props/events/slots/parts, `--lustrous-*` tokens, and core icon names without loading large manifests into context:
+  ```bash
+  ./scripts/lookup-lustrous.mjs lustrous-select
+  ./scripts/lookup-lustrous.mjs --tokens surface
+  ./scripts/lookup-lustrous.mjs --icons arrow
+  ```
+- **Starter templates in `assets/`:**
+  - [`assets/importmap-starter.html`](assets/importmap-starter.html) — Zero-bundler HTML5 + ES Import Map starter page.
+  - [`assets/app-shell-starter.ts`](assets/app-shell-starter.ts) — Responsive Lit 3 workspace shell (`<lustrous-sidebar>`, `<lustrous-sidebar-drawer>`, `<lustrous-side-panel>`, shortcuts).
+  - [`assets/theme-overrides.css`](assets/theme-overrides.css) — Unlayered brand palette override stylesheet winning cleanly over `@layer lustrous`.
+- **Companion skills in this plugin:** Activate `lustrous-component-author` when authoring new custom `LustrousElement` subclasses, and `lustrous-reviewer` when auditing templates/styles for CSP, token, SSR, and WCAG 2.1 AA compliance.
 
 ---
 
@@ -35,7 +55,7 @@ import "@ghchinoy/lustrous-lit/components/lustrous-flex";
   - `resolveLustrousTheme(el?)` → `"light" | "dark"`
   - `installLustrousTheme(root?)` / `installLustrousFonts(baseUrl?)`
   - `lustrousDarkDeclarations` / `lustrousLightDeclarations` (selector-free `CSSResult`s for shadow roots)
-  - `setLustrousLabels({ close, dismiss, notificationBanner, notifications, backToMainMenu })` for global localization
+  - `setLustrousLabels({ close, dismiss, notificationBanner, notifications })` for global localization
 
 ---
 
@@ -64,7 +84,7 @@ Inherits all `<lustrous-box>` attributes plus:
 - Item (`<lustrous-grid-item>`): `col-span` (`number | "full"`), `row-span`, `col`, `row`.
 
 ### `<lustrous-scrollable-box>` (`.../components/lustrous-scrollable-box`)
-Scroll region with thin scrollbars, configurable overflow edge-fade masks (`scrim="both | start | end | none"`, `scrim-size="36"`), `scrollbar="hover | always | hidden"`, `label` (`role="region"`), and automatic `tabindex="0"` when overflowing.
+Scroll region with thin scrollbars, `36px` overflow edge-fade masks (`scrim="both | start | end | none"`), `scrollbar="hover | always | hidden"`, `label` (`role="region"`), and automatic `tabindex="0"` when overflowing.
 
 ### `<lustrous-text>` (`.../components/lustrous-text`)
 Inline by default; `block`, `heading="1"…"6"` (via `ElementInternals`), `wrap="truncate"`, and `max-lines="1 | 2 | 3"` render block-level:
@@ -81,8 +101,8 @@ Bidirectional multilingual prose typography extending `<lustrous-text>`:
 ## 3. Buttons, Links & Interactive Surfaces
 
 - **`<lustrous-button>`** (`.../components/lustrous-button`):
-  - `variant`: `"primary"`, `"accent"` (default), `"tonal"`, `"outline"`, `"bright"`, `"on-surface"`, `"on-surface-variant"`, `"translucent"`.
-  - `size`: `"m"` (`44px`), `"s"` (`36px`, `44px` min touch target at `≤ 768px`), `"xs"` (`28px`); `shape`: `"rounded"` | `"pill"`.
+  - `variant`: `"accent"` (default), `"tonal"`, `"outline"`, `"bright"`, `"on-surface"`, `"on-surface-variant"`, `"translucent"`.
+  - `size`: `"m"` (`44px`), `"s"` (`36px`), `"xs"` (`28px`); `shape`: `"rounded"` | `"pill"`.
   - `icon`, `trailing-icon`, `expanded` (renders animated chevron + `aria-expanded`), `muted`, `disabled`, `type="button | submit | reset"`, or link mode via `href`, `target`, `rel`, `download`.
 - **`<lustrous-icon-button>`** (`.../components/lustrous-icon-button`):
   - Circular icon button (`44px` / `36px` / `28px`). **Always pass `aria-label`!** Supports `icon`, `variant` (`"on-surface"` default), `size`, `badge` (unread dot), `expanded`, `href`.
@@ -145,11 +165,11 @@ All Lustrous form controls work natively with `<form>`, `new FormData(form)`, `r
 
 - **`<lustrous-tooltip>`** (`.../components/lustrous-tooltip`): Non-interactive hover/focus label (`content="..."`, `side="top | bottom | left | right | inline-start | inline-end"`, `only-when-truncated`). Wrap around a focusable trigger.
 - **`<lustrous-popover>`** (`.../components/lustrous-popover`): Interactive top-layer card (`heading`, `content`, `slot="content"`, `arrow` default `true`, `size="s | m | l"`, `open-on-hover`, `close-label` for modal focus-trap mode, `mobile-drawer` to auto-switch to `<lustrous-bottom-sheet>` at `≤ 768px`, `primary-action`, `secondary-action`).
-- **`<lustrous-menu>`** (`.../components/lustrous-menu`): Top-layer WAI-ARIA menu with nested submenus and mobile (`≤ 768px`) in-place submenu drill-down. Slotted `slot="trigger"`, `.items` (`type: "action" | "link" | "selection" | "toggle" | "submenu" | "header" | "section" | "divider"`, `closeOnClick`, `background`, `trailingContent`), `.returnFocus`, `@lustrous-select` (`{ item, id?, value? }`).
-- **`<lustrous-dialog>`** (`.../components/lustrous-dialog`): Structured card (`size="s | m | l"`, `heading`, `dismissible`, `focus-heading`, `primary-action`, `secondary-action`, or `slot="actions"`). Add `modal` (`slot="trigger"`, `.open`, `mobile-drawer`, `scrim-blur`, `@lustrous-action`, `@lustrous-close-request`) to present over a top-layer scrim.
+- **`<lustrous-menu>`** (`.../components/lustrous-menu`): Top-layer WAI-ARIA menu with nested submenus. Slotted `slot="trigger"`, `.items` (`type: "action" | "link" | "selection" | "toggle" | "submenu" | "header" | "section" | "divider"`), `@lustrous-select` (`{ item, id?, value? }`).
+- **`<lustrous-dialog>`** (`.../components/lustrous-dialog`): Structured card (`size="s | m | l"`, `heading`, `dismissible`, `primary-action`, `secondary-action`, or `slot="actions"`). Add `modal` (`slot="trigger"`, `.open`, `@lustrous-action`, `@lustrous-close-request`) to present over a top-layer scrim.
 - **`<lustrous-modal>`** (`.../components/lustrous-modal`): Low-level `<dialog>.showModal()` primitive (`open`, `label`, `scrim="default | immersive"`, `scrim-blur`, `slot="trigger"`).
-- **`<lustrous-bottom-sheet>`** (`.../components/lustrous-bottom-sheet`): Mobile-first modal sheet with `0.5` peek / `1` full snap points, fixed `slot="header"` / `slot="footer"`, default `<lustrous-scrollable-box>` wrapper (`scrollable`, `body-scrim`), and swipe-to-close (`open`, `expanded`, `label`).
-- **`<lustrous-snackbar>`**, **`showSnack`**, **`dismissSnack`** (`.../components/lustrous-snackbar`, defaults to `max="3"`; set `max="1"` for single-toast replacement):
+- **`<lustrous-bottom-sheet>`** (`.../components/lustrous-bottom-sheet`): Mobile-first modal sheet with `0.5` peek / `1` full snap points and swipe-to-close (`open`, `expanded`, `label`).
+- **`<lustrous-snackbar>`**, **`showSnack`**, **`dismissSnack`** (`.../components/lustrous-snackbar`):
   ```ts
   import { showSnack } from "@ghchinoy/lustrous-lit/components/lustrous-snackbar";
 
@@ -158,13 +178,13 @@ All Lustrous form controls work natively with `<form>`, `new FormData(form)`, `r
     action: { label: "Undo", onClick: () => rollback() },
   });
   ```
-- **`<lustrous-banner>`** (`.../components/lustrous-banner`): Named `<section>` status/promo banner (`variant="overlay | inline | info | positive | warning | error"`, `heading`, `icon`, `badge`, `clickable` firing `lustrous-click`, `dismissible`, `primary-action`, `secondary-action`).
+- **`<lustrous-banner>`** (`.../components/lustrous-banner`): Named `<section>` status/promo banner (`variant="overlay | inline | info | positive | warning | error"`, `heading`, `icon`, `badge`, `dismissible`, `primary-action`, `secondary-action`).
 
 ---
 
 ## 6. Navigation, View Switchers & Disclosure
 
-- **`<lustrous-sidebar>`** (`.../components/lustrous-sidebar`): Collapsible `272px` ↔ `56px` shell (`density="default | compact-panel | mobile"`, `surface-tone="surface | surface-bright"`) composed with `<lustrous-sidebar-header>` (`dismiss-variant="trailing-close | leading-back"`), `<lustrous-sidebar-nav>`, `<lustrous-sidebar-scroll-area>`, `<lustrous-sidebar-section>`, `<lustrous-sidebar-item>` (`icon`, `href`, `active`, `badge="unread | needs-input | in-progress"`, `pill-badge`/`slot="badge"`, `editing` inline rename, `meta`, `pending`, `.actions`, `.items`), `<lustrous-sidebar-message>`, `<lustrous-sidebar-footer>`, and `<lustrous-sidebar-drawer>` (for `≤ 959.98px`).
+- **`<lustrous-sidebar>`** (`.../components/lustrous-sidebar`): Collapsible `272px` ↔ `56px` shell composed with `<lustrous-sidebar-header>`, `<lustrous-sidebar-nav>`, `<lustrous-sidebar-scroll-area>`, `<lustrous-sidebar-section>`, `<lustrous-sidebar-item>` (`icon`, `href`, `active`, `badge="unread | needs-input | in-progress"`, `meta`, `pending`, `.actions`, `.items`), `<lustrous-sidebar-message>`, `<lustrous-sidebar-footer>`, and `<lustrous-sidebar-drawer>` (for `≤ 959.98px`).
 - **`<lustrous-side-panel>`** (`.../components/lustrous-side-panel`): Complementary `<aside>` inspector (`open`, `label`, `presentation="split | takeover"`, `side="inline-end | inline-start"`, `slot="header"`, `slot="footer"`, `@lustrous-close-request`).
 - **`<lustrous-tabs>`** (`.../components/lustrous-tabs`): `.tabs=${[{ value: "overview", label: "Overview", icon: "activity" }]}`, `value`, `variant="pill | underline"`, optional slotted `<div slot="overview">` panels, `@lustrous-change` (`{ value }`).
 - **`<lustrous-segmented-control>`** (`.../components/lustrous-segmented-control`): 2–5 equal-width segments with sliding pill indicator (`.options`, `value`, `size="s | m"`, `variant="default | transparent"`, `@lustrous-change`).
@@ -183,35 +203,22 @@ All Lustrous form controls work natively with `<form>`, `new FormData(form)`, `r
 - **`<lustrous-skeleton>`** (`.../components/lustrous-skeleton`): Shimmer placeholder (`shape="rect | circle | text"`, `width`, `height`, `border-radius`). Wrap skeleton groups in an `aria-busy="true"` container.
 - **`<lustrous-code-block>`** (`.../components/lustrous-code-block`): Dark `--lustrous-font-code` snippet container (`label`, `code` or slotted text, `wrap`, `no-copy`, `@lustrous-copy`).
 - **`<lustrous-image>`** (`.../components/lustrous-image`): Responsive `<img>` box (`src`, `alt`, `decorative`, `aspect-ratio="16/9 | 4/3 | 1/1 | ..."`, `object-fit="cover | contain | ..."`).
-- **`<lustrous-photo-lightbox>`** (`.../components/lustrous-photo-lightbox`) & **`<lustrous-video-lightbox>`** (`.../components/lustrous-video-lightbox`): Immersive full-screen media viewers (`src`, `label`, `poster`, `captions-src`, `rounded`, `.navigation`, `open`, `slot="trigger"`, `slot="actions"`).
+- **`<lustrous-photo-lightbox>`** (`.../components/lustrous-photo-lightbox`) & **`<lustrous-video-lightbox>`** (`.../components/lustrous-video-lightbox`): Immersive full-screen media viewers (`src`, `label`, `poster`, `captions-src`, `open`, `slot="trigger"`, `slot="actions"`).
 
 ---
 
-## 8. Keyboard Shortcuts
+## 8. Keyboard Shortcuts & Icons
 
-- **`<lustrous-kbd>`** (`.../components/lustrous-kbd`): Platform-aware keycap chip (`keys="Mod+Shift+K"`, `.keys=${["⇧", "⌘", "K"]}`, or `<lustrous-kbd>Esc</lustrous-kbd>`; `size="s | m"`).
-- **`<lustrous-keyboard-shortcuts-modal>`** (`.../components/lustrous-keyboard-shortcuts-modal`): Grouped shortcut reference dialog (`.sections=${[{ title: "General", rows: [{ description: "Quick search", keys: "Mod+K" }] }]}`, `open`, `slot="trigger"`).
-- **`LustrousShortcutController`** (`@ghchinoy/lustrous-lit/theme`):
-  ```ts
-  private readonly openPalette = new LustrousShortcutController(this, {
-    id: "app.palette",
-    keys: "Mod+K",
-    onTrigger: () => this.showCommandPalette(),
-  });
-  ```
-  Automatically respects editable inputs, IME composition, and enclosing overlay scopes (`LustrousShortcutScopeController`). Helpers: `formatShortcut()`, `getShortcutKeyLabels()`, `getAriaKeyShortcuts()`, `LustrousActiveShortcutsController`.
+- **`<lustrous-kbd>`** (`.../components/lustrous-kbd`) & **`<lustrous-keyboard-shortcuts-modal>`** (`.../components/lustrous-keyboard-shortcuts-modal`): Platform-aware keycap chip (`keys="Mod+Shift+K"`) and grouped shortcut reference dialog (`.sections`).
+- **`LustrousShortcutController`** (`@ghchinoy/lustrous-lit/theme`): Registers shortcuts (`id`, `keys`, `onTrigger`) that automatically respect editable inputs, IME composition, and enclosing overlay scopes (`LustrousShortcutScopeController`).
+- **Icons (`.../components/lustrous-icon`):**
+  - Declarative: `<lustrous-icon name="bolt" size="s" tone="primary"></lustrous-icon>` (`xs` `16px`, `s` `20px`, `m` `24px`, `l` `32px`, `xl` `40px`).
+  - Lit shadow templates: `renderIcon("bolt", "s")` (pass a 3rd `label` string only when non-decorative).
+  - Custom icons: `registerLustrousIcons({ myIcon: { paths: svg`...`, directional: false } })`.
 
 ---
 
-## 9. Icons
-
-- **Declarative:** `<lustrous-icon name="bolt" size="s" tone="primary"></lustrous-icon>` (`size`: `xs` `16px`, `s` `20px`, `m` `24px`, `l` `32px`, `xl` `40px`).
-- **Inside Lit shadow templates:** `renderIcon("bolt", "s")` (zero wrapper DOM; pass a 3rd `label` string only when non-decorative).
-- **Custom icons:** `registerLustrousIcons({ myIcon: { paths: svg`...`, directional: false } })` from `@ghchinoy/lustrous-lit/components/lustrous-icon` (`0 0 24 24` viewBox).
-
----
-
-## 10. Authoring & CSS Token Rules (Strict Checklist)
+## 9. Authoring & CSS Token Rules (Strict Checklist)
 
 1. **Always use `--lustrous-*` tokens** (`--lustrous-color-*`, `--lustrous-space-*`, `--lustrous-radius-*`, `--lustrous-elevation-level1`, `--lustrous-elevation-level2`, `--lustrous-font-*`, `lustrousType()`). Never hardcode hex values or raw pixel spacing.
 2. **Override tokens without `!important`:** Because `lustrous-theme.css` lives in `@layer lustrous`, unlayered `:root` / `[data-theme="dark"]` token overrides win automatically.

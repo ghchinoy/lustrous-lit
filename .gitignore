@@ -6,6 +6,8 @@ playwright-report-visual/
 playwright-report-a11y/
 test-results/
 .vitest/
+.serena/
+.antigravitycli/
 src/**/screenshots/*.png
 *.tgz
 .DS_Store

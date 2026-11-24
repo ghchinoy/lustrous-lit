@@ -47,8 +47,10 @@ jobs:
       - name: Build package & Custom Elements Manifest
         run: pnpm build
 
-      - name: Verify custom-elements.json is up to date
-        run: git diff --exit-code -- custom-elements.json
+      - name: Verify custom-elements.json & Agent Plugin artifacts are up to date
+        run: |
+          pnpm check:plugin
+          git diff --exit-code -- custom-elements.json plugins/lustrous-lit
 
       - name: Run SSR smoke & Chromium hydration checks
         run: pnpm test:ssr

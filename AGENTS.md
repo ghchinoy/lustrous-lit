@@ -56,7 +56,8 @@ Requires **Node.js `>= 22.23.4`** and **`pnpm@10.34.6`**.
 | `pnpm install` | — | Install workspace dependencies (`--frozen-lockfile` in CI) |
 | `pnpm check:clean` | `node scripts/check-clean.mjs` | Verify clean-room identifier hygiene and enforce zero inline `style=` attributes in `src/components/**/*.ts` |
 | `pnpm typecheck:all` | `tsc --noEmit && tsc --noEmit -p examples/app` | Typecheck the design-system library, tests, stories, and example app |
-| `pnpm build` | `tsc -p tsconfig.build.json && node scripts/build-css.mjs && pnpm run analyze` | Compile `dist/`, emit `dist/lustrous-theme.css`, and regenerate `custom-elements.json` |
+| `pnpm build` | `tsc -p tsconfig.build.json && node scripts/build-css.mjs && pnpm run analyze && node scripts/sync-plugin.mjs` | Compile `dist/`, emit `dist/lustrous-theme.css`, regenerate `custom-elements.json`, and sync `plugins/lustrous-lit/` |
+| `pnpm check:plugin` | `bash scripts/validate-plugins.sh && node scripts/sync-plugin.mjs --check` | Validate Agent Plugins v1.0.0 manifests, skill frontmatter, executable scripts, and catalog sync |
 | `pnpm test:ssr` | `node scripts/ssr-smoke.mjs && node scripts/ssr-hydrate.mjs` | Verify `@lit-labs/ssr` Declarative Shadow DOM rendering and Chromium client hydration |
 | `pnpm test` | `vitest run` | Run Vitest Browser Mode unit & interaction tests in headless Chromium |
 | `pnpm test:browsers` | `LUSTROUS_BROWSERS=chromium,firefox,webkit vitest run` | Run the full unit test suite across Chromium, Firefox, and WebKit |
@@ -100,9 +101,9 @@ lustrous-lit/
 ├── fonts/                              # Self-hosted OFL-1.1 Google Sans Flex + Google Sans Code WOFF2 & lustrous-fonts.css
 ├── docs/                               # Deep-dive guides: theming.md, responsive.md, authoring-components.md, frameworks.md
 ├── examples/app/                       # Meridian Studio multi-pane reference app
-├── scripts/                            # build-css.mjs, ssr-smoke.mjs, ssr-hydrate.mjs, check-clean.mjs, prune-visual-snapshots.mjs
-├── .agents/skills/lustrous-lit/
-│   └── SKILL.md                        # Distributable AI agent skill for consuming @ghchinoy/lustrous-lit
+├── scripts/                            # build-css.mjs, sync-plugin.mjs, validate-plugins.sh, ssr-smoke.mjs, ssr-hydrate.mjs, check-clean.mjs
+├── .claude-plugin/marketplace.json     # Deterministic skill/plugin discovery index for npx skills & Claude Code
+├── plugins/lustrous-lit/               # Distributable Agent Plugins v1.0.0 package (lustrous-lit, lustrous-component-author, lustrous-reviewer)
 └── .github/workflows/                  # ci.yml, pages.yml, release.yml, update-visual-baselines.yml
 ```
 

@@ -38,11 +38,17 @@ pnpm add @ghchinoy/lustrous-lit lit
 npm install @ghchinoy/lustrous-lit lit
 ```
 
-### AI Coding Agent Skill (Optional)
+### AI Coding Agent Plugin & Skills (Optional)
 
-Install the bundled [Lustrous agent skill (`SKILL.md`)](./.agents/skills/lustrous-lit/SKILL.md) for OpenCode, Claude Code, Cursor, or Codex:
+This repository ships an [Agent Plugins v1.0.0](https://agent-plugins.org) package at [`plugins/lustrous-lit/`](./plugins/lustrous-lit/) (indexed via [`.claude-plugin/marketplace.json`](./.claude-plugin/marketplace.json)) containing three specialized skills:
+- **[`lustrous-lit`](./plugins/lustrous-lit/skills/lustrous-lit/SKILL.md)** — UI composition, `--lustrous-*` tokens, forms, overlays, shortcuts, icons, starter templates, and `lookup-lustrous.mjs`.
+- **[`lustrous-component-author`](./plugins/lustrous-lit/skills/lustrous-component-author/SKILL.md)** — Extending `LustrousElement`, `ElementInternals` form controls, CSP-safe `--_lustrous-*` geometry, top-layer overlays, SSR, and `forced-colors`.
+- **[`lustrous-reviewer`](./plugins/lustrous-lit/skills/lustrous-reviewer/SKILL.md)** — Automated CSP, token, icon, SSR, and WCAG 2.1 AA static auditor (`audit-lustrous.mjs`) and review rubric.
+
+Install into OpenCode, Claude Code, Cursor, Gemini CLI, Codex, or Antigravity:
 
 ```bash
+# Install all Lustrous skills (or pass --skill lustrous-lit)
 npx skills add ghchinoy/lustrous-lit
 ```
 
@@ -401,7 +407,7 @@ Lustrous uses a two-layer responsive model. CSS attributes (`mobile-direction`, 
 All token pairs meet **WCAG 2.1 AA** (`≥ 4.5:1` text, `≥ 3:1` UI boundaries), interactive touch targets measure at least `44×44px`, composite widgets implement roving `tabindex` with RTL-aware arrow keys, animations respect `prefers-reduced-motion: reduce`, and all surfaces support Windows High Contrast (`forced-colors: active`).
 
 ### Frameworks, CSP & SSR
-Components work in Plain HTML + Import Maps, Lit 3, React 19 / `@lit/react`, Vue 3, Angular, Svelte 5, embedded Go/Rust/Python servers, strict `style-src 'self'` CSP headers, and `@lit-labs/ssr` Declarative Shadow DOM hydration. See **[Frameworks, CSP & SSR](./docs/frameworks.md)** and the **[Agent Skill (`SKILL.md`)](./.agents/skills/lustrous-lit/SKILL.md)**.
+Components work in Plain HTML + Import Maps, Lit 3, React 19 / `@lit/react`, Vue 3, Angular, Svelte 5, embedded Go/Rust/Python servers, strict `style-src 'self'` CSP headers, and `@lit-labs/ssr` Declarative Shadow DOM hydration. See **[Frameworks, CSP & SSR](./docs/frameworks.md)** and the **[Agent Plugin (`plugins/lustrous-lit`)](./plugins/lustrous-lit/skills/lustrous-lit/SKILL.md)**.
 
 ---
 
